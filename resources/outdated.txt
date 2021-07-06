@@ -1,0 +1,159 @@
+@bot.command(name='exec')
+@commands.is_owner()
+async def execute(ctx, *, code: str):
+    try:
+        exec(code, globals(), locals())
+    except Exception as e:
+        await ctx.send('You messed up\nCode: {c}\nMessage, {m}'.format(c=type(e).__name__, m=str(e)))
+
+
+# @bot.command(name='eval')
+# @commands.is_owner()
+# async def evaluate(ctx, *, code: str):
+#     try:
+#         await ctx.send(eval(code, globals(), locals()))
+#     except Exception as e:
+#         await ctx.send('You messed up\nCode: {c}\nMessage, {m}'.format(c=type(e).__name__, m=str(e)))
+
+@bot.group(invoke_without_command=True, aliases=['fridge'])
+async def storage(ctx):
+    async with aiofiles.open('quotes', 'r+') as fr:
+        lines = (await fr.read()).split('\n')
+    try:
+        line = lines.pop(random.randrange(len(lines)))
+        async with aiofiles.open('quotes', 'w+') as fw:
+            await fw.write('\n'.join(lines))
+            await fw.flush()
+        if line is not None and len(str(line).strip('\n')) != 0:
+            await ctx.send(line)
+        else:
+            raise IndexError
+    except IndexError:
+        await ctx.send('It\'s empty...')
+@storage.command(name='add')
+async def add(ctx, *, msg: str):
+    async with aiofiles.open('quotes', 'a+') as fa:
+        if msg is not None:
+            await fa.write(msg + '\n')
+        await fa.flush()
+
+# Move out of main
+@bot.command(name="Init", help="Start server-side frontend", hidden=True)
+@commands.is_owner()
+async def frontend(ctx):
+    channel = ctx.channel
+    # global bot.frontend_active
+    if bot.frontend_active:
+        await ctx.send('Frontend active')
+        return
+    bot.frontend_active = True
+    await bot.change_presence(activity=discord.Game(name='AI Activated'))
+    while True:
+        npt = await ainput('> ')
+        if not npt:
+            continue
+
+        if npt[0] != '#':
+            npt = '\n'.join(npt.split('\\n'))  # Make newlines work
+
+            # while True:  # Make eval sections
+            #     if '[{' in npt:
+            #         split = npt.replace('[{', '{[]}').replace('}]', '{[]}').split('{[]}')
+            #         try:
+            #             split[1] = eval(split[1])
+            #             npt = ''.join(split)
+            #         except Exception as e:
+            #             print(e)
+            #             await channel.send('Something messed up\nGo yell at Cata')
+            #             break
+            #     else:
+            #         break
+
+            await channel.send(npt)
+            continue
+
+        cmd = npt.split()[0]
+        if cmd == '#channel':
+
+            if len(npt.split()) > 1:
+                tmp = npt.split()[1]
+
+                if tmp == 'show':
+                    print(f'[{channel.guild.name:.16}] [{channel.name:.16}]')
+
+                if tmp == 'list':
+                    for guild in bot.guilds:
+                        print(guild.name)
+                        for channel in guild.channels:
+                            print('  ' + channel.name)
+
+                if tmp.isdigit():
+                    tempchannel = bot.get_channel(int(tmp))
+                    if tempchannel is not None:
+                        print('Channel changed!')
+                        channel = tempchannel
+                    else:
+                        print('Invalid channel')
+
+        if cmd == '#emoji':
+            msg = bot.emojis(npt.split()[1:])
+            await channel.send(msg)
+
+        if cmd == "#reboot":
+            await boot()
+
+        if cmd == '#exit':
+            break
+
+    bot.frontend_active = False
+    await bot.change_presence(activity=None)
+    print('Leaving frontend')
+
+
+def emoji(*names):
+    fin = ''
+    for name in names:
+        try:
+            fin += bot.emojis[name] + ' '
+            # return ''.join([bot.emojis[str(name)] for name in names])
+        except KeyError:
+            fin += name + ' '
+    return fin
+
+  def to_sec(time: str) -> int:
+    times = {'s': 1, 'm': 60, 'h': 3600, 'd': 86400}
+    try:
+        num = int(time[:-1])
+        multi = times[time[-1].lower()]
+        return num * multi
+    except (KeyError, ValueError):
+        return 0
+
+@bot.command(name='enable_slash_commands')
+async def enable_slash_commands(ctx):
+    await ctx.send('..?')
+    await ctx.send('Stupid stuff has happened so DM Cata')
+    if ctx.guild.id not in bot.slash_guilds:
+        bot.slash_guilds.append(ctx.guild.id)
+    pass
+
+@commands.command(name='emoji', help='Send an emoji from a server the bot is in')
+async def a_emoji(self, ctx):
+    names = ctx.message.content.replace('::', ' ').replace(':', '').split()[1:]
+    # print(names)
+    if not names:
+        await ctx.send('Yell at Cata to fix emoji list')
+        await ctx.send('\n'.join(
+            name for name in self.bot.emojis.keys()
+        ))
+        return
+    await ctx.send(self.bot.emoji(*names))
+
+
+@bot.event
+async def on_raw_reaction_add(payload):
+    message = await bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+    if str(payload.emoji.name) == '❌' and message.author.id == bot.user.id:
+        await message.delete()
+    else:
+        pass
