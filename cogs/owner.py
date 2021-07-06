@@ -1,4 +1,6 @@
 import asyncio
+import typing
+
 import discord
 from discord.ext import commands
 from contextlib import suppress
@@ -59,18 +61,7 @@ class owner(commands.Cog):
         if stderr and printerr:
             print(f'[stderr]\n{stderr.decode()}')
 
-    @commands.command(name='reload', hidden=True)
-    @commands.is_owner()
-    async def reload(self, ctx, *, cog: str):
-        """Command which Reloads a Module.
-        Remember to use dot path. e.g: cogs.owner"""
-        try:
-            self.bot.unload_extension(cog)
-            self.bot.load_extension(cog)
-        except Exception as e:
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
-        else:
-            await ctx.send('**`SUCCESS`**')
+
 
     @commands.command(name='load', hidden=True)
     @commands.is_owner()
@@ -98,6 +89,16 @@ class owner(commands.Cog):
             await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
         else:
             await ctx.send('**`SUCCESS`**')
+
+    @commands.command()
+    async def invite(self, ctx, perms: typing.Optional[int] = 2483416129, slashCommands: typing.Optional[bool] = True):
+        """Create an invite for the bot.
+        \rUse this link to create invites:
+        \rhttps://discordapi.com/permissions.html"""
+        msg = f'https://discord.com/api/oauth2/authorize?client_id={self.bot.user.id}&permissions={perms}'
+        if slashCommands:
+            msg += '&scope=bot%20applications.commands'
+        return await ctx.send(msg)
 
 
     # Entering internet zone

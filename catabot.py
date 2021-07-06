@@ -1,3 +1,4 @@
+import contextlib
 from os import getenv, listdir
 from discord_slash import SlashCommand
 from discord_slash.context import *
@@ -29,15 +30,19 @@ async def ping(ctx):
     await ctx.send('Pong!')
 
 
-@bot.command()
-async def invite(ctx, perms: typing.Optional[int] = 2483416129, slashCommands: typing.Optional[bool] = True):
-    """Create an invite for the bot.
-    \rUse this link to create invites:
-    \rhttps://discordapi.com/permissions.html"""
-    msg = f'https://discord.com/api/oauth2/authorize?client_id={bot.user.id}&permissions={perms}'
-    if slashCommands:
-        msg += '&scope=bot%20applications.commands'
-    return await ctx.send(msg)
+@commands.command(name='reload', hidden=True)
+@commands.is_owner()
+async def reload(ctx, *, cog: str):
+    """Command which Reloads a Module.
+    Remember to use dot path. e.g: cogs.owner"""
+    try:
+        with contextlib.suppress(commands.errors.ExtensionAlreadyLoaded):
+            bot.unload_extension(cog)
+        bot.load_extension(cog)
+    except Exception as e:
+        await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
+    else:
+        await ctx.send('**`SUCCESS`**')
 
 
 @bot.event
