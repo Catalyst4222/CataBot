@@ -4,6 +4,9 @@ import discord
 from discord.ext import commands
 import youtube_dl
 import typing
+from discord_slash.cog_ext import cog_slash, cog_component
+from discord_slash.utils.manage_components import *
+from discord_slash.context import SlashContext, ComponentContext
 from pathlib import Path
 
 
@@ -90,6 +93,20 @@ class FunCog(commands.Cog):
         embed.add_field(name="Field1", value="Value of Field1", inline=False)
         embed.set_footer(text=f"Created at {str(ctx.message.created_at):.19} UTC?", icon_url=ctx.author.avatar_url)
         await ctx.send(embed=embed)
+
+    @cog_slash(name='link', description='just a harmless link')
+    async def rickroll(self, ctx: SlashContext):
+        button = create_button(5, label='Link?', url='https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+        await ctx.send('Here you go~', components=[create_actionrow(button)])
+
+    @cog_slash(name='button', description='Trying to figure out buttons')
+    async def slash_button(self, ctx: SlashContext):
+        button = create_button(1, label='hi', custom_id='button_hi')
+        await ctx.send('Trying to figure out buttons', components=[create_actionrow(button, )])
+
+    @cog_component()
+    async def button_hi(self, ctx: ComponentContext):
+        await ctx.send('Hewwo!')
 
 
 def setup(bot):

@@ -97,20 +97,6 @@ class Buttons(commands.Cog):
         await ctx.send('Poll closed!')
 
 
-    @cog_slash(name='button', description='Trying to figure out buttons')
-    async def slash_button(self, ctx: SlashContext):
-        button = create_button(1, label='hi', custom_id='button_hi')
-        await ctx.send('Trying to figure out buttons', components=[create_actionrow(button, )])
-
-    @cog_component()
-    async def button_hi(self, ctx: ComponentContext):
-        await ctx.send('Hewwo!')
-
-    @cog_slash(name='link', description='just a harmless link')
-    async def rickroll(self, ctx: SlashContext):
-        button = create_button(5, label='Link?', url='https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-        await ctx.send('Here you go~', components=[create_actionrow(button)])
-
 
 def setup(bot):
     bot.add_cog(Buttons(bot))
