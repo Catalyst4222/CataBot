@@ -1,11 +1,12 @@
 from discord.ext import commands
+from os import getenv
 import discord
 from discord_slash import SlashCommand
 
 bot = commands.Bot(command_prefix='#', case_insensitive=True)
 slash = SlashCommand(bot, sync_commands=True, sync_on_cog_reload=True)
 
-bot.TOKEN = 'ODM1OTI1MDI3MzM3MjczMzU0.YIWh2Q.e_s4prgklKV5PXZQnX124ygJ-gU'
+bot.TOKEN = getenv('MAIN_TOKEN')
 
 bot.load_extension('cogs.applications')
 
