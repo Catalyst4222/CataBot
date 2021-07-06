@@ -30,13 +30,13 @@ async def ping(ctx):
     await ctx.send('Pong!')
 
 
-@commands.command(name='reload', hidden=True)
+@bot.command(name='reload', hidden=True)
 @commands.is_owner()
 async def reload(ctx, *, cog: str):
     """Command which Reloads a Module.
     Remember to use dot path. e.g: cogs.owner"""
     try:
-        with contextlib.suppress(commands.errors.ExtensionAlreadyLoaded):
+        with contextlib.suppress(commands.errors.ExtensionNotLoaded):
             bot.unload_extension(cog)
         bot.load_extension(cog)
     except Exception as e:
@@ -44,6 +44,17 @@ async def reload(ctx, *, cog: str):
     else:
         await ctx.send('**`SUCCESS`**')
 
+
+@bot.command(name='exit', aliases=['panic', 'shutdown'])
+async def exit(ctx):
+    with open('log.log', 'a+') as f:
+        f.write(f'{ctx.author} has called the shutdown command from channel {ctx.channel.name} in {ctx.guild.name}\n')
+
+    cogs = bot.cogs.copy()
+    for cog in cogs:
+        bot.remove_cog(cog)
+
+    await ctx.send('This incident will be reported')
 
 @bot.event
 async def on_ready():
