@@ -1,8 +1,6 @@
-import discord
+
 from discord.ext import commands
-import typing
 import json
-import discord_slash as slash
 from discord_slash.cog_ext import cog_subcommand
 import aiohttp
 import pathlib

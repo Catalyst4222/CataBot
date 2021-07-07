@@ -1,10 +1,7 @@
-import discord
-import discord_slash
 from discord_slash.context import *
 from discord.ext import commands
 from discord_slash.cog_ext import *
 from discord_slash.utils.manage_components import *
-import typing
 
 
 class Slash(commands.Cog):

@@ -1,13 +1,10 @@
 import asyncio
 import os
-import discord
 from discord.ext import commands
 import youtube_dl
-import typing
 from discord_slash.cog_ext import cog_slash, cog_component
 from discord_slash.utils.manage_components import *
 from discord_slash.context import SlashContext, ComponentContext
-from pathlib import Path
 
 
 class FunCog(commands.Cog):

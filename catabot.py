@@ -5,7 +5,6 @@ from discord_slash.context import *
 from discord_slash.utils.manage_components import *
 from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
-import discord
 from pprint import pprint as pp
 
 menu = DefaultMenu(active_time=60)
