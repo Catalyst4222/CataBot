@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 from pprint import pprint as pp
 
+
 menu = DefaultMenu(active_time=60)
 bot = commands.Bot(command_prefix='#', case_insensitive=True, help_command=PrettyHelp(menu=menu))
 slash = SlashCommand(bot,
@@ -15,8 +16,6 @@ slash = SlashCommand(bot,
 
 load_dotenv()
 bot.TOKEN = getenv('MAIN_TOKEN')
-
-initial_extensions = ['cogs.utils', 'cogs.owner', 'cogs.SlashCog', 'cogs.FunCog']
 
 for cog in listdir('./cogs'):
     if cog.endswith('.py'):

@@ -7,30 +7,19 @@ import aiohttp
 import pathlib
 from discord_slash.utils.manage_components import *
 
-
-class cache():
-    def __init__(self, func):
-        self.value = None
-        self.func = func
-
-    def __call__(self):
-        if self.value is None:
-            self.value = self.func()
-        return self.value
+from . import utils
 
 
-@cache
+@utils.cache
 def activity_data():
     async def future():
-        print('Future running')
         source = pathlib.Path(__file__)
         source /= '../../resources/activities.json'
         async with aiofiles.open(source.resolve()) as f:
             contents = await f.read()
-            return dict(contents)
+            return json.loads(contents)
 
-    data = asyncio.get_running_loop().run_until_complete(future())
-    print(data)
+    data = asyncio.get_event_loop().run_until_complete(future())
     return data
 
 class Applications(commands.Cog):
