@@ -1,4 +1,5 @@
-
+import asyncio
+import aiofiles
 from discord.ext import commands
 import json
 from discord_slash.cog_ext import cog_subcommand
@@ -6,9 +7,31 @@ import aiohttp
 import pathlib
 from discord_slash.utils.manage_components import *
 
-path = pathlib.Path(__file__).parent.parent / 'resources' / 'activities.json'
-file = json.load(open(path))
 
+class cache():
+    def __init__(self, func):
+        self.value = None
+        self.func = func
+
+    def __call__(self):
+        if self.value is None:
+            self.value = self.func()
+        return self.value
+
+
+@cache
+def activity_data():
+    async def future():
+        print('Future running')
+        source = pathlib.Path(__file__)
+        source /= '../../resources/activities.json'
+        async with aiofiles.open(source.resolve()) as f:
+            contents = await f.read()
+            return dict(contents)
+
+    data = asyncio.get_running_loop().run_until_complete(future())
+    print(data)
+    return data
 
 class Applications(commands.Cog):
     """Commands designed to create special applications, largely beta"""
@@ -29,7 +52,7 @@ class Applications(commands.Cog):
             "required": True,
             "type": 3,
             "choices": [
-                *[{'name': key, 'value': str(file['playable'][key])} for key in file['playable']],
+                *[{'name': key, 'value': str(activity_data()['playable'][key])} for key in activity_data()['playable']],
             ]
         }], description='Create a voice channel activity')
     async def stable_slash(self, ctx, activity_type):
@@ -41,7 +64,7 @@ class Applications(commands.Cog):
             "required": True,
             "type": 3,
             "choices": [
-                *[{'name': key, 'value': str(file['testing'][key])} for key in file['testing']],
+                *[{'name': key, 'value': str(activity_data()['testing'][key])} for key in activity_data()['testing']],
             ]
         }], description='Create a voice channel activity')
     async def beta(self, ctx, activity_type):
@@ -74,9 +97,9 @@ class Applications(commands.Cog):
     async def activities(self, ctx):
         await ctx.send(
             'Stable activities:\n' +
-            '\n'.join([f'{key}: {file["playable"][key]}' for key in file['playable']]) + '\n' +
+            '\n'.join([f'{key}: {activity_data()["playable"][key]}' for key in activity_data()['playable']]) + '\n' +
             '\nBeta activities:\n' +
-            '\n'.join([f'{key}: {file["testing"][key]}' for key in file["testing"]]) + '\n' +
+            '\n'.join([f'{key}: {activity_data()["testing"][key]}' for key in activity_data()["testing"]]) + '\n' +
             '\nUse `#activities play <id>` to start one'
         )
 
