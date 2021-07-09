@@ -6,7 +6,15 @@ from discord_slash.utils.manage_components import *
 from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 from pprint import pprint as pp
+import json
+import logging
 
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w+')
+handler.setFormatter(logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s'))
+logger.addHandler(handler)
 
 menu = DefaultMenu(active_time=60)
 bot = commands.Bot(command_prefix='#', case_insensitive=True, help_command=PrettyHelp(menu=menu))
@@ -45,8 +53,7 @@ async def reload(ctx, *, cog: str):
 
 @bot.command(name='exit', aliases=['panic', 'shutdown'])
 async def exit(ctx):
-    with open('log.log', 'a+') as f:
-        f.write(f'{ctx.author} has called the shutdown command from channel {ctx.channel.name} in {ctx.guild.name}\n')
+    logger.warning(f'{ctx.author.name + ctx.author.discriminator} has used exit!')
 
     cogs = bot.cogs.copy()
     for cog in cogs:
