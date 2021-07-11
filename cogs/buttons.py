@@ -4,6 +4,7 @@ from discord_slash.cog_ext import cog_slash, cog_component
 from discord_slash.utils.manage_components import *
 from discord_slash.context import SlashContext, ComponentContext
 import datetime
+import time
 
 guild_ids = [740302616713756878, 775035228309422120, 783740572824895498, 730606260948303882]
 
@@ -13,6 +14,9 @@ class Buttons(commands.Cog):
 
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.running_polls = self.bot.settings.get('running_polls', {})
+        if not self.running_polls:
+            self.bot.settings['running_polls'] = self.running_polls
 
     @cog_slash()
     async def counter(self, ctx: SlashContext):
@@ -29,7 +33,7 @@ class Buttons(commands.Cog):
             )
         ))
 
-    @cog_slash(description='Make a poll. Will fail when bot is being developed', options=[
+    @cog_slash(name='poll', description='Make a poll. Max of 25 options', options=[
         {
             'name': 'options',
             'description': 'What options you want, separated by |',
@@ -48,54 +52,74 @@ class Buttons(commands.Cog):
             'required': False,
             'type': 3,
         },
-
         {
             'name': 'timeout',
             'description': 'How long the poll should last in hours, default 24',
             'required': False,
             'type': 4,
         },
+        {
+            'name': 'max_choices',
+            'description': 'How many choices a user can choose, default 1',
+            'required': False,
+            'type': 4,
+        }
     ])
     async def vote(self, ctx: SlashContext, title: str = '', description: str = '',
-                   options: str = '', timeout: int = 24):
+                   options: str = '', timeout: int = 24, max_choices: int = 1):
+        now = int(time.time())
+        options = options.split('|')
+
+        description += f'\n\nThis poll was made at <t:{now}>\n' + \
+                       f'It will end <t:{now + (timeout * 3600)}:R> ({timeout} hours from the start)'
         embed = discord.Embed(title=title, description=description)
-        buttons = []
 
-        for opt in options.split('|'):
-            buttons.append(create_button(1, label=opt, custom_id=f'{opt}'))
+        select_opts = []
+        for opt in options:
+            select_opts.append(create_select_option(label=opt, value=opt))
 
-        vote_opts = dict((opt, 0) for opt in options.split('|'))
-        for key in vote_opts:
-            embed.add_field(name=key, value=str(vote_opts[key]))
-        await ctx.send(embed=embed, components=[create_actionrow(*buttons)])
+        for key in options:
+            embed.add_field(name=key, value='0')
 
+        await ctx.send(embed=embed, components=[create_actionrow(create_select(
+            select_opts, custom_id='pollman', max_values=max_choices
+        ))])
+        self.running_polls[ctx.message.id] = {
+            'embed': embed,
+            'options': {i: 0 for i in options},
+            'voters': {}
+        }
 
-        future = datetime.datetime.now() + datetime.timedelta(hours=timeout)
-        voted = []
+        await asyncio.sleep(timeout * 3600)
 
-        while datetime.datetime.now() < future:
-            try:
-                btn_ctx = await wait_for_component(self.bot, messages=ctx.message,
-                                                   check=lambda x: datetime.datetime.now() < future, timeout=300)
-            except asyncio.TimeoutError:
-                continue
+        embed: discord.Embed = self.running_polls[ctx.message.id]['embed']
+        embed.clear_fields()
+        for key in (options := self.running_polls[ctx.message.id]['options']):
+            embed.add_field(name=key, value=str(options[key]))
+        embed.description = description + '\n\nThis poll is now closed'
 
-            if btn_ctx.author_id in voted:
-                await btn_ctx.send('You already voted!', hidden=True)
-                continue
-            else:
-                voted.append(btn_ctx.author_id)
+        await ctx.message.edit(content='Poll closed!', embed=embed)
+        del self.running_polls[ctx.message.id]
 
-            vote_opts[btn_ctx.custom_id] += 1
+    @cog_component()
+    async def pollman(self, ctx: ComponentContext):
+        poll = self.running_polls.get(ctx.origin_message_id)
+        if poll is None:
+            await ctx.send('This poll is out of date', hidden=True)
 
-            embed.clear_fields()
-            for key in vote_opts:
-                embed.add_field(name=key, value=str(vote_opts[key]))
-            await btn_ctx.edit_origin(embed=embed,)
-            await btn_ctx.send(f'Voted for {btn_ctx.custom_id}!', hidden=True)
+        if ctx.author_id in poll['voters']:  # if voted, remove votes
+            prev = poll["voters"][ctx.author_id]  # gives a list of previous choices
+            for opt in (prev or []):
+                poll['options'][opt] -= 1
 
-        await ctx.send('Poll closed!')
+        poll['voters'][ctx.author_id] = ctx.selected_options
+        for opt in ctx.selected_options:
+            poll['options'][opt] += 1
 
+        poll['embed'].clear_fields()
+        for key in poll['options']:
+            poll['embed'].add_field(name=key, value=str(poll['options'][key]))
+        await ctx.edit_origin(embed=poll['embed'])
 
 
 def setup(bot):

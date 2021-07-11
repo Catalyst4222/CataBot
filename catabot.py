@@ -25,12 +25,12 @@ slash = SlashCommand(bot,
 load_dotenv()
 bot.TOKEN = getenv('MAIN_TOKEN')
 
+with open('settings.json') as f:
+    bot.settings = json.load(f)
+
 for cog in listdir('./cogs'):
     if cog.endswith('.py'):
         bot.load_extension('cogs.' + cog[:-3])
-
-with open('settings.json') as f:
-    bot.settings = json.load(f)
 
 @bot.command()
 async def ping(ctx):
