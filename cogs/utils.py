@@ -20,7 +20,7 @@ async def run_cmd(cmd: str, printout: bool = True, printerr: bool = True):
         print(f'[stderr]\n{stderr.decode()}')
 
 
-class cache():
+class Cache:
     def __init__(self, func: Callable):
         self.value = None
         self.func = func
@@ -31,11 +31,12 @@ class cache():
         return self.value
 
 
-def coro_to_func(coro: Callable[[..., Any], Coroutine[Any, Any, Any]]) -> Callable:
-    @functools.wraps(coro)
-    def inner(*args, **kwargs):
-        return asyncio.get_running_loop().run_until_complete(coro(*args, **kwargs))
-    return inner
+# Currently unknown how to fix
+# def coro_to_func(coro: Callable[[..., Any], Coroutine[Any, Any, Any]]) -> Callable:
+#     @functools.wraps(coro)
+#     def inner(*args, **kwargs):
+#         return asyncio.get_running_loop().run_until_complete(coro(*args, **kwargs))
+#     return inner
 
 
 def cmd_to_func(cmd: commands.Command) -> Callable:
@@ -70,6 +71,26 @@ class GlobalChannel(commands.Converter):
                 if channel is None:
                     raise commands.BadArgument(f'Could not find a channel by ID {argument!r}.')
                 return channel
+
+
+# https://stackoverflow.com/questions/34116942/how-to-cache-asyncio-coroutines modified
+class AsyncCache:
+    def __init__(self, coro: Callable[[...], Coroutine]):
+        self.coro = coro
+        self.done = False
+        self.result = None
+        self.lock = asyncio.Lock()
+
+        functools.wraps(self.coro)(self.__call__.__func__)
+
+
+    async def __call__(self, *args, **kwargs):
+        async with self.lock:
+            if self.done:
+                return self.result
+            self.result = await self.coro(*args, **kwargs)
+            self.done = True
+            return self.result
 
 
 def setup(*_, ): pass
