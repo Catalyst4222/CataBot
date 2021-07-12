@@ -4,7 +4,7 @@ from discord_slash.cog_ext import *
 from discord_slash.utils.manage_components import *
 
 
-class Slash(commands.Cog):
+class SlashCog(commands.Cog):
     """Cog dedicated to slash commands"""
     def __init__(self, bot):
         self.bot = bot
@@ -64,4 +64,4 @@ class Slash(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Slash(bot))
+    bot.add_cog(SlashCog(bot))

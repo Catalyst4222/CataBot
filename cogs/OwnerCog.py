@@ -3,8 +3,6 @@ import typing
 
 import discord
 from discord.ext import commands
-from contextlib import suppress
-
 import io
 import textwrap
 import traceback

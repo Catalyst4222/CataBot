@@ -22,7 +22,7 @@ def activity_data():
     data = asyncio.get_event_loop().run_until_complete(future())
     return data
 
-class Applications(commands.Cog):
+class ApplicationCog(commands.Cog):
     """Commands designed to create special applications, largely beta"""
     def __init__(self, bot):
         self.bot = bot
@@ -99,4 +99,4 @@ class Applications(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Applications(bot))
+    bot.add_cog(ApplicationCog(bot))

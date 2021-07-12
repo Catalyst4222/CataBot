@@ -9,7 +9,7 @@ import time
 guild_ids = [740302616713756878, 775035228309422120, 783740572824895498, 730606260948303882]
 
 
-class Buttons(commands.Cog):
+class ButtonCog(commands.Cog):
     """Testing Cog designed for button experiments"""
 
     def __init__(self, bot: commands.Bot):
@@ -123,4 +123,4 @@ class Buttons(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(Buttons(bot))
+    bot.add_cog(ButtonCog(bot))

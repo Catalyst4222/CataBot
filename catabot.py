@@ -40,7 +40,7 @@ with open('settings.json') as f:
     bot.settings = json.load(f)
 
 for cog in listdir('./cogs'):
-    if cog.endswith('.py'):
+    if cog.endswith('Cog.py'):
         bot.load_extension('cogs.' + cog[:-3])
 
 @bot.command()
