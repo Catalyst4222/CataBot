@@ -5,7 +5,10 @@ import youtube_dl
 from discord_slash.cog_ext import cog_slash, cog_component
 from discord_slash.utils.manage_components import *
 from discord_slash.context import SlashContext, ComponentContext
+from contextlib import suppress
+from typing import Optional
 
+from . import utils
 
 class FunCog(commands.Cog):
     """Commands for general fun things"""
@@ -104,6 +107,12 @@ class FunCog(commands.Cog):
     @cog_component()
     async def button_hi(self, ctx: ComponentContext):
         await ctx.send('Hewwo!')
+
+    @commands.command(name='say', hidden=True)
+    async def msg_send(self, ctx, channel: Optional[utils.GlobalChannel], *, msg: str):
+        await (channel if await self.bot.is_owner(ctx.author) and channel is not None else ctx).send(msg)
+        with suppress(discord.Forbidden):
+            await ctx.message.delete()
 
 
 def setup(bot):

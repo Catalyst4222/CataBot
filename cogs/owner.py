@@ -16,19 +16,13 @@ import copy
 from . import utils
 
 
-class owner(commands.Cog):
+class OwnerCog(commands.Cog):
     """Please don't mess with these, largely meant for the owner"""
     def __init__(self, bot):
         self.bot = bot
 
         self._last_result = None
         self.sessions = set()
-
-    @commands.command(name='say', hidden=True)
-    async def msg_send(self, ctx, channel: Optional[utils.GlobalChannel], *, msg: str):
-        await (channel if await self.bot.is_owner(ctx.author) and channel is not None else ctx).send(msg)
-        with suppress(discord.Forbidden):
-            await ctx.message.delete()
 
 
     @commands.command(name='load', hidden=True)
@@ -255,4 +249,4 @@ class owner(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(owner(bot))
+    bot.add_cog(OwnerCog(bot))
