@@ -37,6 +37,10 @@ class EventCog(commands.Cog):
     async def on_slash_command_error(self, ctx, err):
         await self.error_checker(ctx, err)
 
+    @listen()
+    async def on_component_callback_error(self, ctx, err):
+        await self.error_checker(ctx, err)
+
 
     @staticmethod
     async def error_checker(ctx, error):
@@ -64,11 +68,12 @@ class EventCog(commands.Cog):
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.send(f'That command is currently on cooldown. Try again in {error.cooldown} seconds')
 
-        elif isinstance(error, discord_slash.error.CheckFailure):
+        elif isinstance(error, discord_slash.error.CheckFailure) or isinstance(error, commands.CheckFailure):
             await ctx.send('A check failed when preparing the command')
 
 
         else:
+            await ctx.send('An unhandled error occurred')
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
