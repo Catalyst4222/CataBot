@@ -1,8 +1,11 @@
 import asyncio
+import functools
+import discord_slash
 from discord.ext import commands
+from typing import Callable, Coroutine, Any
 
 
-async def run_cmd(cmd, printout=True, printerr=True):
+async def run_cmd(cmd: str, printout: bool = True, printerr: bool = True):
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -18,19 +21,42 @@ async def run_cmd(cmd, printout=True, printerr=True):
 
 
 class cache():
-    def __init__(self, func):
+    def __init__(self, func: Callable):
         self.value = None
         self.func = func
 
-    def __call__(self):
+    def __call__(self, *args, **kwargs) -> Any:
         if self.value is None:
             self.value = self.func()
         return self.value
 
 
+def coro_to_func(coro: Callable[[..., Any], Coroutine[Any, Any, Any]]) -> Callable:
+    @functools.wraps(coro)
+    def inner(*args, **kwargs):
+        return asyncio.get_running_loop().run_until_complete(coro(*args, **kwargs))
+    return inner
+
+
+def cmd_to_func(cmd: commands.Command) -> Callable:
+    @functools.wraps(cmd.callback)
+    def inner(*args, **kwargs):
+        return cmd.callback(*args, **kwargs)
+
+    return inner
+
+
+def slash_to_func(cmd: discord_slash.model.BaseCommandObject) -> Callable:
+    @functools.wraps(cmd.func)
+    async def inner(*args, **kwargs):
+        return await cmd.func(*args, **kwargs)
+
+    return inner
+
+
 # Stolen from the internet
 class GlobalChannel(commands.Converter):
-    async def convert(self, ctx, argument):
+    async def convert(self, ctx: commands.Context, argument):
         try:
             return await commands.TextChannelConverter().convert(ctx, argument)
         except commands.BadArgument:
