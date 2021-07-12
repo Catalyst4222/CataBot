@@ -1,4 +1,5 @@
 import contextlib
+import sys
 from os import getenv, listdir
 from discord_slash import SlashCommand
 from discord_slash.context import *
@@ -12,9 +13,19 @@ import logging
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w+')
-handler.setFormatter(logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s'))
-logger.addHandler(handler)
+formatter = logging.Formatter('[%(levelname)s] [%(name)s]: %(message)s')
+
+file_handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w+')
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+stream_handler = logging.StreamHandler(sys.stdout)
+stream_handler.setLevel(logging.WARNING)
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
+
 
 menu = DefaultMenu(active_time=60)
 bot = commands.Bot(command_prefix='#', case_insensitive=True, help_command=PrettyHelp(menu=menu))
