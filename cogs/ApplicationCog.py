@@ -1,101 +1,104 @@
-import asyncio
-import aiofiles
-from discord.ext import commands
 import json
-from discord_slash.cog_ext import cog_subcommand
+import typing
 import aiohttp
-import pathlib
-from discord_slash.utils.manage_components import *
+from discord.ext import commands
+from discord_slash.cog_ext import cog_slash, cog_component
+from discord_slash.context import ComponentContext, SlashContext, InteractionContext
+from discord_slash.utils.manage_components import create_select, create_actionrow, create_button
 
-from . import utils
-
-
-@utils.cache
-def activity_data():
-    async def future():
-        source = pathlib.Path(__file__)
-        source /= '../../resources/activities.json'
-        async with aiofiles.open(source.resolve()) as f:
-            contents = await f.read()
-            return json.loads(contents)
-
-    data = asyncio.get_event_loop().run_until_complete(future())
-    return data
 
 class ApplicationCog(commands.Cog):
     """Commands designed to create special applications, largely beta"""
+
+    select_opts = [
+        {'default': False,
+         'description': None,
+         'emoji': {'id': 864601164544081920, 'name': 'act_chess'},
+         'label': 'Chess In The Park',
+         'value': 'Chess In The Park'},
+        {'default': False,
+         'description': None,
+         'emoji': {'id': 864601164422184961, 'name': 'act_fish'},
+         'label': 'Fishington.io',
+         'value': 'Fishington.io'},
+        {'default': False,
+         'description': None,
+         'emoji': {'id': 864601185369587733, 'name': 'act_poker'},
+         'label': 'Poker Night',
+         'value': 'Poker Night'},
+        {'default': False,
+         'description': None,
+         'emoji': {'id': 864601185598832690, 'name': 'act_yt'},
+         'label': 'Youtube Together',
+         'value': 'Youtube Together'},
+        {'default': False,
+         'description': None,
+         'emoji': {'id': 864601087364825099, 'name': 'act_betray'},
+         'label': 'Betrayal.io',
+         'value': 'Betrayal.io'}
+    ]
+
+    game_ids = {
+        'Betrayal.io': 773336526917861400,
+        'Youtube Together': 755600276941176913,
+        'Fishington.io': 814288819477020702,
+        'Chess In The Park': 832012774040141894,
+        'Poker Night': 755827207812677713
+    }
+
     def __init__(self, bot):
         self.bot = bot
 
     @staticmethod
-    async def get_activity(url, api_json, headers):
+    async def get_activity(url: str, api_json: dict, headers: dict) -> int:
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=api_json, headers=headers) as response:
-                data = json.loads(await response.text())
-                code = data["code"]
+                res = json.loads(await response.text())
+                code = res["code"]
                 return code
 
-    @cog_subcommand(name="stable", base='activities', options=[{
-            "name": "activity_type",
-            "description": "Type of activity.",
-            "required": True,
-            "type": 3,
-            "choices": [
-                *[{'name': key, 'value': str(activity_data()['playable'][key])} for key in activity_data()['playable']],
-            ]
-        }], description='Create a voice channel activity')
-    async def stable_slash(self, ctx, activity_type):
-        await self.request(ctx, activity_type)
+    async def request(self, ctx: InteractionContext, activity_type: int) -> int:
+        url = f"https://discord.com/api/v8/channels/{ctx.author.voice.channel.id}/invites"
+        api_json = {
+            "max_age": 86400,
+            "max_uses": 0,
+            "target_application_id": f"{activity_type}",
+            "target_type": 2,
+            "temporary": False,
+            "validate": None
+        }
+        headers = {
+            "Authorization": f"Bot {self.bot.TOKEN}",
+            "Content-Type": "application/json"
+        }
+        return await self.get_activity(url, api_json, headers)
 
-    @cog_subcommand(name="beta", base='activities', options=[{
-            "name": "activity_type",
-            "description": "Type of activity.",
-            "required": True,
-            "type": 3,
-            "choices": [
-                *[{'name': key, 'value': str(activity_data()['testing'][key])} for key in activity_data()['testing']],
-            ]
-        }], description='Create a voice channel activity')
-    async def beta(self, ctx, activity_type):
-        await self.request(ctx, activity_type)
+    async def send_select(self, ctx: typing.Union[commands.Context, InteractionContext]):
+        select = create_select(self.select_opts, custom_id='act_callback', min_values=0)
+        await ctx.send('Choose your activity here:', components=[create_actionrow(select)])
 
-
-    async def request(self, ctx, activity_type):
-        if ctx.author.voice:
-            url = f"https://discord.com/api/v8/channels/{ctx.author.voice.channel.id}/invites"
-            api_json = {
-                "max_age": 86400,
-                "max_uses": 0,
-                "target_application_id": f"{activity_type}",
-                "target_type": 2,
-                "temporary": False,
-                "validate": None
-            }
-            headers = {
-                "Authorization": f"Bot {self.bot.TOKEN}",
-                "Content-Type": "application/json"
-            }
-
-            code = await self.get_activity(url, api_json, headers)
-            button = create_button(5, label='Click me!', url=f"https://discord.gg/{code}")
-            await ctx.send("Here's you activity:", components=[create_actionrow(button)])
+    @cog_component()
+    async def act_callback(self, ctx: ComponentContext):
+        if len(ctx.selected_options) == 1:
+            if ctx.author.voice:
+                code = await self.request(ctx, activity_type=self.game_ids[ctx.selected_options[0]])
+                button = create_button(5, label='Click me!', url=f"https://discord.gg/{code}")
+                await ctx.send(f'''Here's your activity ({ctx.selected_options[0]})''',
+                               components=[create_actionrow(button)], hidden=True)
+            else:
+                await ctx.send("You need to be in a voice channel.", hidden=True)
         else:
-            await ctx.send("You need to be in a voice channel.")
+            await ctx.defer(edit_origin=True)
 
-    @commands.group(invoke_without_command=True)
-    async def activities(self, ctx):
-        await ctx.send(
-            'Stable activities:\n' +
-            '\n'.join([f'{key}: {activity_data()["playable"][key]}' for key in activity_data()['playable']]) + '\n' +
-            '\nBeta activities:\n' +
-            '\n'.join([f'{key}: {activity_data()["testing"][key]}' for key in activity_data()["testing"]]) + '\n' +
-            '\nUse `#activities play <id>` to start one'
-        )
+    @cog_slash(name='activity', description='Create a voice channel activity')
+    async def slash_activity(self, ctx: SlashContext):
+        await self.send_select(ctx)
 
-    @activities.command()
-    async def play(self, ctx, activity: int):
-        """Choose an activity to play. Must be in a voice channel"""
-        await self.request(ctx, activity)
+    @commands.command()
+    async def activity(self, ctx: commands.Context):
+        """Create a voice channel activity
+        A select will be sent with the different activities available"""
+        await self.send_select(ctx)
 
 
 def setup(bot):
