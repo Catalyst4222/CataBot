@@ -1,6 +1,4 @@
 import asyncio
-import typing
-
 import discord
 from discord.ext import commands
 import io
@@ -14,17 +12,19 @@ import copy
 from . import utils
 
 
-class OwnerCog(commands.Cog):
+class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     """Please don't mess with these, largely meant for the owner"""
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         self._last_result = None
         self.sessions = set()
 
 
-    @commands.command(name='load', hidden=True)
-    @commands.is_owner()
+    async def cog_check(self, ctx):
+        return await self.bot.is_owner(ctx.author)
+
+    @commands.command(name='load')
     async def load(self, ctx, *, cog: str):
         """Command which Loads a Module.
         Remember to use dot path. e.g: cogs.owner"""
@@ -37,8 +37,7 @@ class OwnerCog(commands.Cog):
         else:
             await ctx.send('**`SUCCESS`**')
 
-    @commands.command(name='unload', hidden=True)
-    @commands.is_owner()
+    @commands.command(name='unload')
     async def unload(self, ctx, *, cog: str):
         """Command which Unloads a Module.
         Remember to use dot path. e.g: cogs.owner"""
@@ -69,8 +68,7 @@ class OwnerCog(commands.Cog):
             return f'```py\n{e.__class__.__name__}: {e}\n```'
         return f'```py\n{e.text}{"^":>{e.offset}}\n{e.__class__.__name__}: {e}```'
 
-    @commands.command(pass_context=True, hidden=True, name='eval')
-    @commands.is_owner()
+    @commands.command(name='eval')
     async def _eval(self, ctx, *, body: str):
         """Evaluates a code
         WTF is happening I stole this from the internet"""
@@ -118,8 +116,7 @@ class OwnerCog(commands.Cog):
                 self._last_result = ret
                 await ctx.send(f'```py\n{value}{ret}\n```')
 
-    @commands.command(pass_context=True, hidden=True)
-    @commands.is_owner()
+    @commands.command()
     async def repl(self, ctx):
         """Launches an interactive REPL session."""
         variables = {
@@ -208,7 +205,7 @@ class OwnerCog(commands.Cog):
             except discord.HTTPException as e:
                 await ctx.send(f'Unexpected error: `{e}`')
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.is_owner()
     async def sudo(self, ctx, channel: Optional[utils.GlobalChannel], who: Union[discord.Member, discord.User], *,
                    command: str):
@@ -222,7 +219,7 @@ class OwnerCog(commands.Cog):
         new_ctx._db = ctx._db
         await self.bot.invoke(new_ctx)
 
-    @commands.command(hidden=True)
+    @commands.command()
     @commands.is_owner()
     async def do(self, ctx, times: int, *, command):
         """Repeats a command a specified number of times."""
