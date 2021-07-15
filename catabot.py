@@ -28,9 +28,9 @@ logger.addHandler(stream_handler)
 
 
 menu = DefaultMenu(active_time=60)
-bot = commands.Bot(command_prefix='#', case_insensitive=True, help_command=PrettyHelp(menu=menu))
+bot = commands.Bot(command_prefix='#', case_insensitive=True, help_command=PrettyHelp(menu=menu, show_index=False))
 slash = SlashCommand(bot,
-                     # sync_commands=True
+                     sync_commands=True
                      )
 
 load_dotenv()
@@ -42,6 +42,7 @@ with open('settings.json') as f:
 for cog in listdir('./cogs'):
     if cog.endswith('Cog.py'):
         bot.load_extension('cogs.' + cog[:-3])
+
 
 @bot.command()
 async def ping(ctx):
@@ -74,16 +75,13 @@ async def exit(ctx):
 
     await ctx.send('This incident will be reported')
 
+
 @bot.event
 async def on_ready():
     print('Ready!')
 
 
 guild_ids = [740302616713756878, 775035228309422120, 783740572824895498, 730606260948303882, 817958268097789972]
-
-
-
-
 
 
 print('Starting bot')
