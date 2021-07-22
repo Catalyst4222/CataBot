@@ -19,6 +19,8 @@ async def run_cmd(cmd: str, printout: bool = True, printerr: bool = True):
     if stderr and printerr:
         print(f'[stderr]\n{stderr.decode()}')
 
+    return stdout, stderr
+
 
 class Cache:
     def __init__(self, func: Callable):
