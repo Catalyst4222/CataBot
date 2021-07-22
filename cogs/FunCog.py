@@ -126,7 +126,7 @@ class FunCog(commands.Cog):
         async with aiofiles.open('temp/uwu_out.txt') as f:
             data = await f.read()
 
-        await ctx.send('>>> ' + uwu)
+        await ctx.send('>>> ' + data)
 
 
 def setup(bot):
