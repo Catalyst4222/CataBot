@@ -121,7 +121,7 @@ class FunCog(commands.Cog):
     async def uwuify(self, ctx, *, uwu='uwu'):
         async with aiofiles.open('temp/uwu_in.txt', 'w+') as f:
             await f.write(uwu)
-        stdout, stderr = await utils.run_cmd('uwuify uwu_in.txt > uwu_out.txt')
+        stdout, stderr = await utils.run_cmd('uwuify temp/uwu_in.txt > temp/uwu_out.txt')
 
         if stderr:
             raise OSError(stderr.decode())
