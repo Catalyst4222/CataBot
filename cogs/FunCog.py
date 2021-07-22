@@ -123,8 +123,11 @@ class FunCog(commands.Cog):
             await f.write(uwu)
         stdout, stderr = await utils.run_cmd('uwuify uwu_in.txt > uwu_out.txt')
 
+        if stderr:
+            raise OSError(stderr.decode())
+
         async with aiofiles.open('temp/uwu_out.txt') as f:
-            data = await f.read()
+            data = (await f.read()).strip('\n ')
 
         await ctx.send('>>> ' + data)
 
