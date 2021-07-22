@@ -5,7 +5,7 @@ from discord.ext import commands
 from typing import Callable, Coroutine, Any
 
 
-async def run_cmd(cmd: str, printout: bool = True, printerr: bool = True):
+async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
     proc = await asyncio.create_subprocess_shell(
         cmd,
         stdout=asyncio.subprocess.PIPE,
