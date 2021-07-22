@@ -1,5 +1,7 @@
 import asyncio
 import os
+
+import discord
 from discord.ext import commands
 import youtube_dl
 from discord_slash.cog_ext import cog_slash, cog_component
@@ -7,6 +9,7 @@ from discord_slash.utils.manage_components import *
 from discord_slash.context import SlashContext, ComponentContext
 from contextlib import suppress
 from typing import Optional
+import aiofiles
 
 from . import utils
 
@@ -113,6 +116,17 @@ class FunCog(commands.Cog):
         await (channel if await self.bot.is_owner(ctx.author) and channel is not None else ctx).send(msg)
         with suppress(discord.Forbidden):
             await ctx.message.delete()
+
+    @commands.command(rest_is_raw=True)
+    async def uwuify(self, ctx, *, uwu='uwu'):
+        async with aiofiles.open('temp/uwu_in.txt', 'w+') as f:
+            await f.write(uwu)
+        stdout, stderr = await utils.run_cmd('uwuify uwu_in.txt > uwu_out.txt')
+
+        async with aiofiles.open('temp/uwu_out.txt') as f:
+            data = await f.read()
+
+        await ctx.send('>>> ' + uwu)
 
 
 def setup(bot):
