@@ -60,11 +60,11 @@ class FunCog(commands.Cog):
 
             await asyncio.to_thread(curl)
 
-            if os.path.getsize('out.mp4') > 8*10**6:
-                await ctx.send('That video is too large!')
-            else:
+            try:
                 with open('out.mp4', 'rb') as fp:
                     await ctx.send('Here is your video:', file=discord.File(fp, 'video.mp4'))
+            except discord.HTTPException:
+                await ctx.send('That video is too large!')
 
             os.remove('out.mp4')
 
