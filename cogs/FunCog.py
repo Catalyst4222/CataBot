@@ -129,7 +129,9 @@ class FunCog(commands.Cog):
         async with aiofiles.open('temp/uwu_out.txt') as f:
             data = (await f.read()).strip('\n ')
 
-        await ctx.send('>>> ' + data)
+        await ctx.send('>>> ' +
+                       await commands.clean_content(escape_markdown=True, fix_channel_mentions=True).convert(ctx, data)
+                       )
 
 
 def setup(bot):
