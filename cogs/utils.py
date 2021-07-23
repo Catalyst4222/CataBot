@@ -13,7 +13,8 @@ async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
 
     stdout, stderr = await proc.communicate()
 
-    print(f'[{cmd!r} exited with {proc.returncode}]')
+    if printerr or printout:
+        print(f'[{cmd!r} exited with {proc.returncode}]')
     if stdout and printout:
         print(f'[stdout]\n{stdout.decode()}')
     if stderr and printerr:
