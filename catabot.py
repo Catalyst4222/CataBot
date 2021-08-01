@@ -7,6 +7,7 @@ from discord_slash.utils.manage_components import *
 from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 from pprint import pprint as pp
+from discord.ext import commands
 import json
 import logging
 
@@ -28,7 +29,8 @@ logger.addHandler(stream_handler)
 
 
 menu = DefaultMenu(active_time=60)
-bot = commands.Bot(command_prefix='#', case_insensitive=True, help_command=PrettyHelp(menu=menu, show_index=False))
+bot = commands.Bot(command_prefix=commands.when_mentioned_or('#'), case_insensitive=True,
+                   help_command=PrettyHelp(menu=menu, show_index=False))
 slash = SlashCommand(bot,
                      sync_commands=True
                      )
