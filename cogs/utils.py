@@ -4,6 +4,7 @@ import discord
 import discord_slash
 from discord.ext import commands
 from typing import Callable, Coroutine, Any, Union, Optional
+from discord_slash.context import InteractionContext
 
 
 async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
@@ -97,7 +98,7 @@ class AsyncCache:
             return self.result
 
 
-async def get_or_make_role(ctx: commands.Context, role: Union[str, int]) -> Optional[discord.Role]:
+async def get_or_make_role(ctx: Union[commands.Context, InteractionContext], role: Union[str, int]) -> Optional[discord.Role]:
     try:
         new_role = await commands.RoleConverter().convert(ctx, role)
     except commands.RoleNotFound:
