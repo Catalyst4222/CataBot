@@ -39,17 +39,16 @@ load_dotenv()
 bot.TOKEN = getenv('MAIN_TOKEN')
 
 with open('settings.json') as f:
-    bot.settings = json.load(f)
+    try:
+        bot.settings = json.load(f)
+    except json.JSONDecodeError:
+        bot.settings = {}
 
 for cog in listdir('./cogs'):
     if cog.endswith('Cog.py'):
         bot.load_extension('cogs.' + cog[:-3])
 
 
-@bot.command()
-async def ping(ctx):
-    """pong!"""
-    await ctx.send('Pong!')
 
 
 @bot.command(name='reload', hidden=True)
@@ -87,4 +86,8 @@ guild_ids = [740302616713756878, 775035228309422120, 783740572824895498, 7306062
 
 
 print('Starting bot')
-bot.run(bot.TOKEN)
+try:
+    bot.run(bot.TOKEN)
+finally:
+    json.dump(bot.settings, open('settings.json', 'w+'))
+    print('Exited')
