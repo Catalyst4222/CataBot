@@ -1,8 +1,9 @@
 import asyncio
 import functools
+import discord
 import discord_slash
 from discord.ext import commands
-from typing import Callable, Coroutine, Any
+from typing import Callable, Coroutine, Any, Union, Optional
 
 
 async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
@@ -94,6 +95,18 @@ class AsyncCache:
             self.result = await self.coro(*args, **kwargs)
             self.done = True
             return self.result
+
+
+async def get_or_make_role(ctx: commands.Context, role: Union[str, int]) -> Optional[discord.Role]:
+    try:
+        new_role = await commands.RoleConverter().convert(ctx, role)
+    except commands.RoleNotFound:
+        if type(role) == str:
+            new_role = await ctx.guild.create_role(name=role)
+        else:
+            new_role = None
+
+    return new_role
 
 
 def setup(*_, ): pass
