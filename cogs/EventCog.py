@@ -3,6 +3,8 @@ import traceback
 from discord.ext import commands
 import discord
 import discord_slash
+from discord_slash.context import InteractionContext
+from typing import Union
 
 listen = commands.Cog.listener
 
@@ -41,14 +43,19 @@ class EventCog(commands.Cog):
     async def on_component_callback_error(self, ctx, err):
         await self.error_checker(ctx, err)
 
-
+    # noinspection PyArgumentList
     @staticmethod
-    async def error_checker(ctx, error):
+    async def error_checker(ctx: Union[InteractionContext, commands.Context], error):
         ignored = (commands.CommandNotFound,)
         error = getattr(error, 'original', error)
 
         if isinstance(error, ignored):
             return
+
+        if isinstance(ctx, InteractionContext):
+            if not ctx.responded:
+                ctx.send = ctx.channel.send
+
 
         if isinstance(error, commands.DisabledCommand):
             await ctx.send(f'{ctx.command} has been disabled.')
@@ -81,7 +88,12 @@ class EventCog(commands.Cog):
 
         else:
             await ctx.send(f'An unhandled error occurred')
-            print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+            if hasattr(ctx, 'command'):
+                print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
+            else:
+                # noinspection PyUnresolvedReferences
+                print('Ignoring exception in callback with id {}:'.format(ctx.custom_id), file=sys.stderr)
+
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
 
         await ctx.send(f'`{type(error).__name__}: {error}`')
