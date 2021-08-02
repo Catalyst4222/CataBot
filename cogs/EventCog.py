@@ -95,8 +95,8 @@ class EventCog(commands.Cog):
                 print('Ignoring exception in callback with id {}:'.format(ctx.custom_id), file=sys.stderr)
 
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
+            await ctx.send(f'`{type(error).__name__}: {error}`')
 
-        await ctx.send(f'`{type(error).__name__}: {error}`')
 
 
 def setup(bot):
