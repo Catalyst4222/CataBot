@@ -84,15 +84,15 @@ class ButtonCog(commands.Cog):
         await ctx.send(embed=embed, components=[create_actionrow(create_select(
             select_opts, custom_id='pollman', max_values=max_choices
         ))])
-        self.running_polls[ctx.message.id] = {
-            'embed': embed,
+        self.running_polls[int(ctx.message.id)] = {
+            'embed': embed.to_dict(),
             'options': {i: 0 for i in options},
             'voters': {}
         }
 
         await asyncio.sleep(timeout * 3600)
 
-        embed: discord.Embed = self.running_polls[ctx.message.id]['embed']
+        embed = discord.Embed.from_dict(self.running_polls[ctx.message.id]['embed'])
         embed.clear_fields()
         for key in (options := self.running_polls[ctx.message.id]['options']):
             embed.add_field(name=key, value=str(options[key]))
@@ -103,24 +103,32 @@ class ButtonCog(commands.Cog):
 
     @cog_component()
     async def pollman(self, ctx: ComponentContext):
-        poll = self.running_polls.get(ctx.origin_message_id)
+        poll = self.running_polls.get(ctx.origin_message_id.__str__())
         if poll is None:
-            await ctx.send('This poll is out of date', hidden=True)
+            print(self.running_polls)
+            return await ctx.send('This poll is out of date', hidden=True)
 
-        if ctx.author_id in poll['voters']:  # if voted, remove votes
-            prev = poll["voters"][ctx.author_id]  # gives a list of previous choices
+
+        if ctx.author_id.__str__() in poll['voters']:  # if voted, remove votes
+            prev = poll["voters"][str(ctx.author_id)]  # gives a list of previous choices
             for opt in (prev or []):
                 poll['options'][opt] -= 1
 
-        poll['voters'][ctx.author_id] = ctx.selected_options
+        poll['voters'][ctx.author_id.__str__()] = ctx.selected_options
         for opt in ctx.selected_options:
             poll['options'][opt] += 1
 
-        poll['embed'].clear_fields()
+        embed = discord.Embed.from_dict(poll['embed'])
+        embed.clear_fields()
         for key in poll['options']:
-            poll['embed'].add_field(name=key, value=str(poll['options'][key]))
-        await ctx.edit_origin(embed=poll['embed'])
+            embed.add_field(name=key, value=str(poll['options'][key]))
+        await ctx.edit_origin(embed=embed)
+        poll['embed'] = embed.to_dict()
 
 
 def setup(bot):
     bot.add_cog(ButtonCog(bot))
+
+
+def teardown(bot: commands.Bot):
+    bot.settings['running_polls'] = bot.get_cog('ButtonCog').running_polls
