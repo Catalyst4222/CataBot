@@ -56,7 +56,7 @@ class ButtonCog(commands.Cog):
             'name': 'timeout',
             'description': 'How long the poll should last in hours, default 24',
             'required': False,
-            'type': 4,
+            'type': 10,
         },
         {
             'name': 'max_choices',
