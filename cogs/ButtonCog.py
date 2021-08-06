@@ -105,7 +105,6 @@ class ButtonCog(commands.Cog):
     async def pollman(self, ctx: ComponentContext):
         poll = self.running_polls.get(ctx.origin_message_id)
         if poll is None:
-            print(self.running_polls)
             return await ctx.send('This poll is out of date', hidden=True)
 
 
