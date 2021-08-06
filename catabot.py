@@ -7,6 +7,7 @@ from discord_slash.utils.manage_components import *
 from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 from pprint import pprint as pp
+from contextlib import suppress
 from discord.ext import commands
 import pickle
 import logging
@@ -38,9 +39,10 @@ slash = SlashCommand(bot,
 load_dotenv()
 bot.TOKEN = getenv('MAIN_TOKEN')
 
-with open('settings.pickle', 'rb') as f:
-    pkl = pickle.load(f)
-    bot.settings = pkl or {}
+pkl = {}
+with suppress(FileNotFoundError), open('settings.pickle', 'rb') as f:
+    pkl: dict = pickle.load(f)
+bot.settings = pkl
 
 for cog in listdir('./cogs'):
     if cog.endswith('Cog.py'):
