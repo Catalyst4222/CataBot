@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 from pprint import pprint as pp
 from discord.ext import commands
-import json
+import pickle
 import logging
 
 
@@ -38,11 +38,9 @@ slash = SlashCommand(bot,
 load_dotenv()
 bot.TOKEN = getenv('MAIN_TOKEN')
 
-with open('settings.json') as f:
-    try:
-        bot.settings = json.load(f)
-    except json.JSONDecodeError:
-        bot.settings = {}
+with open('settings.pickle', 'rb') as f:
+    pkl = pickle.load(f)
+    bot.settings = pkl or {}
 
 for cog in listdir('./cogs'):
     if cog.endswith('Cog.py'):
@@ -89,5 +87,5 @@ print('Starting bot')
 try:
     bot.run(bot.TOKEN)
 finally:
-    json.dump(bot.settings, open('settings.json', 'w+'))
+    pickle.dump(bot.settings, open('settings.pickle', 'wb+'))
     print('Exited')

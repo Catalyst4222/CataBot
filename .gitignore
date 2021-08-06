@@ -1,4 +1,4 @@
 .env
 discord.log
-settings.json
+settings.pickle
 temp/**
