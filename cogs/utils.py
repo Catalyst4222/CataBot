@@ -110,4 +110,30 @@ async def get_or_make_role(ctx: Union[commands.Context, InteractionContext], rol
     return new_role
 
 
+def all_have_permissions(**perms):
+    invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
+    if invalid:
+        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+
+    def predicate(ctx: commands.Context) -> bool:
+        if not ctx.guild:
+            raise commands.NoPrivateMessage
+
+        user_permissions = ctx.author.guild_permissions
+        user_missing = [perm for perm, value in perms.items() if getattr(user_permissions, perm) != value]
+
+        if user_missing:
+            raise commands.MissingPermissions(user_missing)
+
+        self_permissions = ctx.me.guild_permissions
+        self_missing = [perm for perm, value in perms.items() if getattr(self_permissions, perm) != value]
+
+        if self_missing:
+            raise commands.BotMissingPermissions(self_missing)
+
+        return True
+
+    return commands.check(predicate)
+
+
 def setup(*_, ): pass
