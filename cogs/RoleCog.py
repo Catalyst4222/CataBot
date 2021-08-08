@@ -28,7 +28,6 @@ class RoleCog(commands.Cog):
                     ])
     @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
-    @commands.guild_only()
     async def role_select(self, ctx: SlashContext, roles: str, create_roles: bool = False):
         try:
             roles: list[discord.Role] = [
@@ -82,7 +81,6 @@ class RoleCog(commands.Cog):
                     ])
     @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
-    @commands.guild_only()
     async def role_button(self, ctx: SlashContext, role: str, create_role: bool):
         try:
             role = (await utils.get_or_make_role(ctx, role) if create_role else
