@@ -106,6 +106,48 @@ class RoleCog(commands.Cog):
 
         await ctx.send('Roles changed!', hidden=True)
 
+    @cog_subcommand(base='role', subcommand_group='add', name='user', description='Add a role to a user',
+                    options=[
+                        {
+                            'name': 'roles',
+                            'description': 'The roles you want to give, separated by |. Can be mentions or names',
+                            'required': True,
+                            'type': 3
+                        },
+                        {
+                            'name': 'user',
+                            'description': 'The user you want to give the role to',
+                            'required': True,
+                            'type': 6
+                        },
+                        {
+                            'name': 'create_roles',
+                            'description': 'Whether to create any missing roles',
+                            'required': False,
+                            'type': 5
+                        }
+                    ])
+    @commands.bot_has_permissions(manage_roles=True)
+    @commands.has_permissions(manage_roles=True)
+    async def user_add(self, ctx: SlashContext, roles: str, user: discord.Member, create_roles: bool = False):
+        try:
+            role_func = utils.get_or_make_role if create_roles else commands.RoleConverter().convert
+
+            roles: list[discord.Role] = [
+                (
+                    await role_func(ctx, role)
+                )
+                for role in roles.split('|')
+            ]
+            if None in roles:
+                raise commands.RoleNotFound
+
+        except commands.RoleNotFound:
+            return await ctx.send('One or more roles failed to convert')
+
+        await user.add_roles(*roles)
+        await ctx.send('Roles added!', hidden=True)
+
 
 def setup(bot):
     bot.add_cog(RoleCog(bot))
