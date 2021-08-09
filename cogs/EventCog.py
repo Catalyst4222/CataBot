@@ -37,13 +37,16 @@ class EventCog(commands.Cog):
 
     @listen()
     async def on_slash_command_error(self, ctx, err):
+        if ctx.responded:
+            ctx.send = ctx.message.channel.send
         await self.error_checker(ctx, err)
 
     @listen()
     async def on_component_callback_error(self, ctx, err):
+        if ctx.responded:
+            ctx.send = ctx.message.channel.send
         await self.error_checker(ctx, err)
 
-    # noinspection PyArgumentList
     @staticmethod
     async def error_checker(ctx: Union[InteractionContext, commands.Context], error):
         ignored = (commands.CommandNotFound,)
@@ -51,10 +54,6 @@ class EventCog(commands.Cog):
 
         if isinstance(error, ignored):
             return
-
-        if isinstance(ctx, InteractionContext):
-            if not ctx.responded:
-                ctx.send = ctx.channel.send
 
 
         if isinstance(error, commands.DisabledCommand):
