@@ -16,11 +16,17 @@ class UtilsCog(commands.Cog):
         # [await message.delete()
         #  async for message in ctx.channel.history(limit=messages+1)
         #  if message.author == self.bot.user]
-        await ctx.channel.purge(limit=messages+1, check=lambda x: x.author == self.bot.user)
-
+        await ctx.channel.purge(
+            limit=messages + 1, check=lambda x: x.author == self.bot.user
+        )
 
     @commands.command()
-    async def invite(self, ctx, perms: typing.Optional[int] = 2483416129, slashCommands: typing.Optional[bool] = True):
+    async def invite(
+        self,
+        ctx,
+        perms: typing.Optional[int] = 2483416129,
+        slashCommands: typing.Optional[bool] = True,
+    ):
         """Create an invite for the bot.
         \rUse this link to create invites:
         \rhttps://discordapi.com/permissions.html"""
@@ -30,7 +36,5 @@ class UtilsCog(commands.Cog):
         return await ctx.send(msg)
 
 
-
 def setup(bot):
     bot.add_cog(UtilsCog(bot))
-

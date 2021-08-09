@@ -31,8 +31,10 @@ def both_to_func(cmd: typing.Union[commands.Command, discord_slash.model.BaseCom
 
 
 def dual_command(
-        bot: commands.Bot, bot_kwargs: dict,
-        slash: discord_slash.SlashCommand, slash_kwargs: dict
+    bot: commands.Bot,
+    bot_kwargs: dict,
+    slash: discord_slash.SlashCommand,
+    slash_kwargs: dict,
 ):
     def wrapper(func) -> tuple[commands.Command, discord_slash.model.BaseCommandObject]:
         cmd = bot.command(**bot_kwargs)(func)
@@ -42,7 +44,9 @@ def dual_command(
     return wrapper
 
 
-@dual_command(bot=bot, bot_kwargs={}, slash=slash, slash_kwargs=dict(guild_ids=guild_ids))
+@dual_command(
+    bot=bot, bot_kwargs={}, slash=slash, slash_kwargs=dict(guild_ids=guild_ids)
+)
 async def dual_ping(ctx):
     """Ping for both d.py and discord_slash at once!"""
-    await ctx.send('Pong!')
+    await ctx.send("Pong!")

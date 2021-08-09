@@ -7,23 +7,22 @@ import traceback
 from contextlib import redirect_stdout
 import inspect
 from typing import Union, Optional
-import copy
+from copy import copy
 
 from . import utils
 
 
 class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     """Please don't mess with these, largely meant for the owner"""
+
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
         self._last_result = None
         self.sessions = set()
 
-
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
-
 
     # Entering internet zone
     # Nobody knows how this works
@@ -55,7 +54,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             'author': ctx.author,
             'guild': ctx.guild,
             'message': ctx.message,
-            '_': self._last_result
+            '_': self._last_result,
         }
 
         env.update(globals())
@@ -105,20 +104,26 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         }
 
         if ctx.channel.id in self.sessions:
-            await ctx.send('Already running a REPL session in this channel. Exit it with `quit`.')
+            await ctx.send(
+                'Already running a REPL session in this channel. Exit it with `quit`.'
+            )
             return
 
         self.sessions.add(ctx.channel.id)
         await ctx.send('Enter code to execute or evaluate. `exit()` or `quit` to exit.')
 
         def check(m):
-            return m.author.id == ctx.author.id and \
-                   m.channel.id == ctx.channel.id and \
-                   m.content.startswith('`')
+            return (
+                m.author.id == ctx.author.id
+                and m.channel.id == ctx.channel.id
+                and m.content.startswith('`')
+            )
 
         while True:
             try:
-                response = await self.bot.wait_for('message', check=check, timeout=10.0 * 60.0)
+                response = await self.bot.wait_for(
+                    'message', check=check, timeout=10.0 * 60.0
+                )
             except asyncio.TimeoutError:
                 await ctx.send('Exiting REPL session.')
                 self.sessions.remove(ctx.channel.id)
@@ -182,10 +187,15 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
 
     @commands.command()
     @commands.is_owner()
-    async def sudo(self, ctx, channel: Optional[utils.GlobalChannel], who: Union[discord.Member, discord.User], *,
-                   command: str):
-        """Run a command as another user optionally in another channel."""
-        msg = copy.copy(ctx.message)
+    async def sudo(
+        self,
+        ctx,
+        channel: Optional[utils.GlobalChannel],
+        who: Union[discord.Member, discord.User],
+        *, command: str,
+    ):
+        '''Run a command as another user optionally in another channel.'''
+        msg = copy(ctx.message)
         channel = channel or ctx.channel
         msg.channel = channel
         msg.author = who
@@ -198,7 +208,7 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.is_owner()
     async def do(self, ctx, times: int, *, command):
         """Repeats a command a specified number of times."""
-        msg = copy.copy(ctx.message)
+        msg = copy(ctx.message)
         msg.content = ctx.prefix + command
 
         new_ctx = await self.bot.get_context(msg, cls=type(ctx))

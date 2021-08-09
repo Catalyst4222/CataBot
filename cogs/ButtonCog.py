@@ -1,12 +1,22 @@
 import asyncio
+import discord
 from discord.ext import commands
 from discord_slash.cog_ext import cog_slash, cog_component
-from discord_slash.utils.manage_components import *
+from discord_slash.utils.manage_components import (
+    create_actionrow,
+    create_select,
+    create_button,
+    create_select_option,
+)
 from discord_slash.context import SlashContext, ComponentContext
-import datetime
-import time
+from time import time
 
-guild_ids = [740302616713756878, 775035228309422120, 783740572824895498, 730606260948303882]
+guild_ids = [
+    740302616713756878,
+    775035228309422120,
+    783740572824895498,
+    730606260948303882,
+]
 
 
 class ButtonCog(commands.Cog):
@@ -25,53 +35,70 @@ class ButtonCog(commands.Cog):
         components = [create_actionrow(up_button, down_button)]
         await ctx.send('Counter: 0', components=components)
 
-    @cog_component(use_callback_name=False, components=['counter_bump', 'counter_debump'])
+    @cog_component(
+        use_callback_name=False, components=['counter_bump', 'counter_debump']
+    )
     async def counter_callback(self, ctx: ComponentContext):
-        await ctx.edit_origin(content='Counter: ' + str(
-            int(ctx.origin_message.content[9:]) + (
-                1 if ctx.component['custom_id'] == 'counter_bump' else -1
+        await ctx.edit_origin(
+            content='Counter: '
+            + str(
+                int(ctx.origin_message.content[9:])
+                + (1 if ctx.component['custom_id'] == 'counter_bump' else -1)
             )
-        ))
+        )
 
-    @cog_slash(name='poll', description='Make a poll. Max of 25 options', options=[
-        {
-            'name': 'options',
-            'description': 'What options you want, separated by |',
-            'required': True,
-            'type': 3,
-        },
-        {
-            'name': 'title',
-            'description': 'The title of your poll',
-            'required': False,
-            'type': 3,
-        },
-        {
-            'name': 'description',
-            'description': 'The description of your poll',
-            'required': False,
-            'type': 3,
-        },
-        {
-            'name': 'timeout',
-            'description': 'How long the poll should last in hours, default 24',
-            'required': False,
-            'type': 10,
-        },
-        {
-            'name': 'max_choices',
-            'description': 'How many choices a user can choose, default 1',
-            'required': False,
-            'type': 4,
-        }
-    ])
-    async def vote(self, ctx: SlashContext, title: str = '', description: str = '',
-                   options: str = '', timeout: int = 24, max_choices: int = 1):
-        now = int(time.time())
+    @cog_slash(
+        name='poll',
+        description='Make a poll. Max of 25 options',
+        options=[
+            {
+                'name': 'options',
+                'description': 'What options you want, separated by |',
+                'required': True,
+                'type': 3,
+            },
+            {
+                'name': 'title',
+                'description': 'The title of your poll',
+                'required': False,
+                'type': 3,
+            },
+            {
+                'name': 'description',
+                'description': 'The description of your poll',
+                'required': False,
+                'type': 3,
+            },
+            {
+                'name': 'timeout',
+                'description': 'How long the poll should last in hours, default 24',
+                'required': False,
+                'type': 10,
+            },
+            {
+                'name': 'max_choices',
+                'description': 'How many choices a user can choose, default 1',
+                'required': False,
+                'type': 4,
+            },
+        ],
+    )
+    async def vote(
+        self,
+        ctx: SlashContext,
+        title: str = '',
+        description: str = '',
+        options: str = '',
+        timeout: int = 24,
+        max_choices: int = 1,
+    ):
+        now = int(time())
         options = options.split('|')
 
-        description += f'\n\nThis poll was made at <t:{now}>\n' + \
-                       f'It will end <t:{now + (timeout * 3600)}:R> ({timeout} hours from the start)'
+        description += (
+            f'\n\nThis poll was made at <t:{now}>\n'
+            + f'It will end <t:{now + (timeout * 3600)}:R> ({timeout} hours from the start)'
+        )
         embed = discord.Embed(title=title, description=description)
 
         select_opts = []
@@ -81,13 +108,20 @@ class ButtonCog(commands.Cog):
         for key in options:
             embed.add_field(name=key, value='0')
 
-        await ctx.send(embed=embed, components=[create_actionrow(create_select(
-            select_opts, custom_id='pollman', max_values=max_choices
-        ))])
+        await ctx.send(
+            embed=embed,
+            components=[
+                create_actionrow(
+                    create_select(
+                        select_opts, custom_id='pollman', max_values=max_choices
+                    )
+                )
+            ],
+        )
         self.running_polls[ctx.message.id] = {
             'embed': embed,
             'options': {i: 0 for i in options},
-            'voters': {}
+            'voters': {},
         }
 
         await asyncio.sleep(timeout * 3600)
@@ -107,10 +141,9 @@ class ButtonCog(commands.Cog):
         if poll is None:
             return await ctx.send('This poll is out of date', hidden=True)
 
-
         if ctx.author_id in poll['voters']:  # if voted, remove votes
-            prev = poll["voters"][ctx.author_id]  # gives a list of previous choices
-            for opt in (prev or []):
+            prev = poll['voters'][ctx.author_id]  # gives a list of previous choices
+            for opt in prev or []:
                 poll['options'][opt] -= 1
 
         poll['voters'][ctx.author_id] = ctx.selected_options
@@ -123,6 +156,7 @@ class ButtonCog(commands.Cog):
             embed.add_field(name=key, value=poll['options'][key])
         await ctx.edit_origin(embed=embed)
         poll['embed'] = embed
+
 
 def setup(bot):
     bot.add_cog(ButtonCog(bot))

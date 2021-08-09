@@ -9,9 +9,8 @@ from discord_slash.context import InteractionContext
 
 async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
     proc = await asyncio.create_subprocess_shell(
-        cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE)
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
 
     stdout, stderr = await proc.communicate()
 
@@ -70,11 +69,15 @@ class GlobalChannel(commands.Converter):
             try:
                 channel_id = int(argument, base=10)
             except ValueError:
-                raise commands.BadArgument(f'Could not find a channel by ID {argument!r}.')
+                raise commands.BadArgument(
+                    f'Could not find a channel by ID {argument!r}.'
+                )
             else:
                 channel = ctx.bot.get_channel(channel_id)
                 if channel is None:
-                    raise commands.BadArgument(f'Could not find a channel by ID {argument!r}.')
+                    raise commands.BadArgument(
+                        f'Could not find a channel by ID {argument!r}.'
+                    )
                 return channel
 
 
@@ -88,7 +91,6 @@ class AsyncCache:
 
         functools.wraps(self.coro)(self.__call__.__func__)
 
-
     async def __call__(self, *args, **kwargs):
         async with self.lock:
             if self.done:
@@ -98,7 +100,10 @@ class AsyncCache:
             return self.result
 
 
-async def get_or_make_role(ctx: Union[commands.Context, InteractionContext], role: Union[str, int]) -> Optional[discord.Role]:
+async def get_or_make_role(
+    ctx: Union[commands.Context, InteractionContext],
+        role: Union[str, int]
+) -> Optional[discord.Role]:
     try:
         new_role = await commands.RoleConverter().convert(ctx, role)
     except commands.RoleNotFound:
@@ -113,20 +118,26 @@ async def get_or_make_role(ctx: Union[commands.Context, InteractionContext], rol
 def all_have_permissions(**perms):
     invalid = set(perms) - set(discord.Permissions.VALID_FLAGS)
     if invalid:
-        raise TypeError('Invalid permission(s): %s' % (', '.join(invalid)))
+        raise TypeError('Invalid permission(s): {}'.format(', '.join(invalid)))
 
     def predicate(ctx: commands.Context) -> bool:
         if not ctx.guild:
             raise commands.NoPrivateMessage
 
         user_permissions = ctx.author.guild_permissions
-        user_missing = [perm for perm, value in perms.items() if getattr(user_permissions, perm) != value]
+        user_missing = [
+            perm for perm, value in perms.items()
+            if getattr(user_permissions, perm) != value
+        ]
 
         if user_missing:
             raise commands.MissingPermissions(user_missing)
 
         self_permissions = ctx.me.guild_permissions
-        self_missing = [perm for perm, value in perms.items() if getattr(self_permissions, perm) != value]
+        self_missing = [
+            perm for perm, value in perms.items()
+            if getattr(self_permissions, perm) != value
+        ]
 
         if self_missing:
             raise commands.BotMissingPermissions(self_missing)
