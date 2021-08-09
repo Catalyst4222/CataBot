@@ -44,27 +44,8 @@ with suppress(FileNotFoundError), open('settings.pickle', 'rb') as f:
     pkl: dict = pickle.load(f)
 bot.settings = pkl
 
-for cog in listdir('./cogs'):
-    if cog.endswith('Cog.py'):
-        bot.load_extension('cogs.' + cog[:-3])
-
-
-
-
-@bot.command(name='reload', hidden=True)
-@commands.is_owner()
-async def reload(ctx, *, cog: str):
-    """Command which Reloads a Module.
-    Remember to use dot path. e.g: cogs.owner"""
-    try:
-        with contextlib.suppress(commands.errors.ExtensionNotLoaded):
-            bot.unload_extension(cog)
-        bot.load_extension(cog)
-    except Exception as e:
-        await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
-    else:
-        await ctx.send('**`SUCCESS`**')
-
+bot.load_extension('cogs')
+print('Loaded Cogs!')
 
 @bot.command(name='exit', aliases=['panic', 'shutdown'])
 async def exit(ctx):

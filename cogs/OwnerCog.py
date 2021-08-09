@@ -24,31 +24,6 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
 
-    @commands.command(name='load')
-    async def load(self, ctx, *, cog: str):
-        """Command which Loads a Module.
-        Remember to use dot path. e.g: cogs.owner"""
-        try:
-            self.bot.load_extension(cog)
-        except Exception as e:
-            print(traceback.format_exc())
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
-
-        else:
-            await ctx.send('**`SUCCESS`**')
-
-    @commands.command(name='unload')
-    async def unload(self, ctx, *, cog: str):
-        """Command which Unloads a Module.
-        Remember to use dot path. e.g: cogs.owner"""
-
-        try:
-            self.bot.unload_extension(cog)
-        except Exception as e:
-            await ctx.send(f'**`ERROR:`** {type(e).__name__} - {e}')
-        else:
-            await ctx.send('**`SUCCESS`**')
-
 
     # Entering internet zone
     # Nobody knows how this works
