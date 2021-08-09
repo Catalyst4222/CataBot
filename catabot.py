@@ -47,15 +47,22 @@ bot.settings = pkl
 bot.load_extension('cogs')
 print('Loaded Cogs!')
 
-@bot.command(name='exit', aliases=['panic', 'shutdown'])
-async def exit(ctx):
-    logger.warning(f'{ctx.author.name + ctx.author.discriminator} has used exit!')
+@bot.command(name='restart', hidden=True)
+@commands.is_owner()
+async def restart(ctx):
+    logger.warning(f'{ctx.author.name} has rebooted!')
 
-    cogs = bot.cogs.copy()
-    for cog in cogs:
-        bot.remove_cog(cog)
+    try:
+        bot.unload_extension('cogs')
+    except commands.ExtensionNotLoaded:
+        pass
+    bot.load_extension('cogs')
 
-    await ctx.send('This incident will be reported')
+    with suppress(FileNotFoundError), open('settings.pickle', 'rb') as f:
+        pkl: dict = pickle.load(f)
+    bot.settings.update(pkl)
+
+    await ctx.send("You better know what you're doing")
 
 
 @bot.event
