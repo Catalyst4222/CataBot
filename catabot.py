@@ -3,6 +3,8 @@ import pickle
 from sys import stderr
 from contextlib import suppress
 from os import getenv
+
+import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
 from dotenv import load_dotenv
@@ -30,6 +32,7 @@ bot = commands.Bot(
     command_prefix=commands.when_mentioned_or("#"),
     case_insensitive=True,
     help_command=PrettyHelp(menu=menu, show_index=False),
+    intents=discord.Intents.all()
 )
 slash = SlashCommand(
     bot,
