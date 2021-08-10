@@ -1,13 +1,11 @@
-import asyncio
 import discord
 from discord.ext import commands
-import io
-import textwrap
-import traceback
-from contextlib import redirect_stdout
-import inspect
+import io, textwrap, traceback, asyncio, inspect
 from typing import Union, Optional
+from contextlib import redirect_stdout
 from copy import copy
+from discord_slash.model import CommandObject
+from discord_slash.utils.manage_commands import add_slash_command
 
 from . import utils
 
@@ -23,6 +21,37 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
 
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
+
+    class Utils:
+        setup = r"""
+            Common setup tools:
+
+            import asyncio, discord, discord_slash
+            from discord.ext import commands
+            loop = asyncio.get_running_loop()
+            """
+
+        def __init__(self, bot: commands.Bot):
+            self.bot = bot
+
+        def now(self, *args, **kwargs):
+            def inner(coro):
+                asyncio.create_task(coro(*args, **kwargs))
+                return self.promise(coro)
+
+            return inner
+
+        @staticmethod
+        def promise(coro):
+            def inner(*args, **kwargs):
+                return asyncio.create_task(coro(*args, **kwargs))
+            return inner
+
+        async def register_slash(self, command: CommandObject):
+            for guild in command.allowed_guild_ids:
+                await add_slash_command(self.bot.user.id, self.bot.TOKEN, guild_id=guild, cmd_name=command.name,
+                                        description=command.description, options=command.options)
+
 
     # Entering internet zone
     # Nobody knows how this works
@@ -55,6 +84,8 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             'guild': ctx.guild,
             'message': ctx.message,
             '_': self._last_result,
+            'utils': self.Utils(self.bot),  # I made this!
+            'slash': self.bot.slash,
         }
 
         env.update(globals())
@@ -101,6 +132,8 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
             'channel': ctx.channel,
             'author': ctx.author,
             '_': None,
+            'utils': self.Utils(self.bot),  # I made this!
+            'slash': self.bot.slash,
         }
 
         if ctx.channel.id in self.sessions:
