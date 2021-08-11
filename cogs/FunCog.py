@@ -147,7 +147,7 @@ class FunCog(commands.Cog):
         async with aiofiles.open('temp/uwu_in.txt', 'w+') as f:
             await f.write(uwu)
         stdout, stderr = await utils.run_cmd(
-            'uwuify temp/uwu_in.txt > temp/uwu_out.txt'
+            f"echo 'hello world' | uwuify /dev/stdin"
         )
 
         if stderr:
