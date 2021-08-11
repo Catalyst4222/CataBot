@@ -160,7 +160,7 @@ class FunCog(commands.Cog):
             '>>> '
             + await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, stdout)
+            ).convert(ctx, stdout.decode().replace('"', '\\"').replace("'", "\\'"))
         )
 
 
