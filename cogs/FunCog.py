@@ -147,8 +147,10 @@ class FunCog(commands.Cog):
         # async with aiofiles.open('temp/uwu_in.txt', 'w+') as f:
         #     await f.write(uwu)
         stdout, stderr = await utils.run_cmd(
-            f"echo '{uwu}' | uwuify /dev/stdin"
+            f"""echo '{uwu.replace('"', '\\"').replace("'", "\\'")}' | uwuify /dev/stdin"""
         )
+
+        print(stdout)
 
         if stderr:
             raise OSError(stderr.decode())
@@ -160,7 +162,7 @@ class FunCog(commands.Cog):
             '>>> '
             + await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, stdout.decode().replace('"', '\\"').replace("'", "\\'"))
+            ).convert(ctx, stdout.decode())
         )
 
 
