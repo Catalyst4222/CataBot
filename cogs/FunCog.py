@@ -144,21 +144,13 @@ class FunCog(commands.Cog):
 
     @commands.command(rest_is_raw=True)
     async def uwuify(self, ctx, *, uwu='uwu'):
-        # async with aiofiles.open('temp/uwu_in.txt', 'w+') as f:
-        #     await f.write(uwu)
         uwu = uwu.replace('"', '\\"')
-        print(uwu)
         stdout, stderr = await utils.run_cmd(
             f"""echo "{uwu}" | uwuify /dev/stdin"""
         )
 
-        print(stdout)
-
         if stderr:
             raise OSError(stderr.decode())
-
-        # async with aiofiles.open('temp/uwu_out.txt') as f:
-        #     data = (await f.read()).strip('\n ')
 
         await ctx.send(
             '>>> '
