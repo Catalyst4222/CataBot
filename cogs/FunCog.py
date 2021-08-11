@@ -146,8 +146,10 @@ class FunCog(commands.Cog):
     async def uwuify(self, ctx, *, uwu='uwu'):
         # async with aiofiles.open('temp/uwu_in.txt', 'w+') as f:
         #     await f.write(uwu)
+        uwu = uwu.replace('"', '\\"')
+        print(uwu)
         stdout, stderr = await utils.run_cmd(
-            f"""echo '{uwu.replace('"', '\\"').replace("'", "\\'")}' | uwuify /dev/stdin"""
+            f"""echo "{uwu}" | uwuify /dev/stdin"""
         )
 
         print(stdout)
