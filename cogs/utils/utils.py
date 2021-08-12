@@ -101,7 +101,7 @@ class AsyncCache:
 
 
 async def get_or_make_role(
-    ctx: Union[commands.Context, InteractionContext],
+        ctx: Union[commands.Context, InteractionContext],
         role: Union[str, int]
 ) -> Optional[discord.Role]:
     try:
@@ -145,6 +145,23 @@ def all_have_permissions(**perms):
         return True
 
     return commands.check(predicate)
+
+
+# https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries/7205107#7205107
+def merge(a, b, path=None):
+    """merges b into a"""
+    if path is None: path = []
+    for key in b:
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                merge(a[key], b[key], path + [str(key)])
+            elif a[key] == b[key]:
+                pass  # same leaf value
+            else:
+                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
+        else:
+            a[key] = b[key]
+    return a
 
 
 def setup(*_, ): pass
