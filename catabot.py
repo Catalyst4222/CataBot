@@ -10,6 +10,8 @@ from discord_slash import SlashCommand
 from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 
+from cogs import utils
+
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -64,7 +66,7 @@ async def restart(ctx):
 
     with suppress(FileNotFoundError), open('settings.pickle', 'rb') as f:
         pkl: dict = pickle.load(f)
-    bot.settings.update(pkl)
+    bot.settings.update(utils.merge(pkl, bot.settings))
 
     await ctx.send("You better know what you're doing")
 
