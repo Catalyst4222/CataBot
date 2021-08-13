@@ -28,24 +28,24 @@ class ButtonCog(commands.Cog):
         if not self.running_polls:
             self.bot.settings['running_polls'] = self.running_polls
 
-    @cog_slash()
-    async def counter(self, ctx: SlashContext):
-        up_button = create_button(1, label='Count up', custom_id='counter_bump')
-        down_button = create_button(2, label='Count down', custom_id='counter_debump')
-        components = [create_actionrow(up_button, down_button)]
-        await ctx.send('Counter: 0', components=components)
-
-    @cog_component(
-        use_callback_name=False, components=['counter_bump', 'counter_debump']
-    )
-    async def counter_callback(self, ctx: ComponentContext):
-        await ctx.edit_origin(
-            content='Counter: '
-            + str(
-                int(ctx.origin_message.content[9:])
-                + (1 if ctx.component['custom_id'] == 'counter_bump' else -1)
-            )
-        )
+    # @cog_slash()
+    # async def counter(self, ctx: SlashContext):
+    #     up_button = create_button(1, label='Count up', custom_id='counter_bump')
+    #     down_button = create_button(2, label='Count down', custom_id='counter_debump')
+    #     components = [create_actionrow(up_button, down_button)]
+    #     await ctx.send('Counter: 0', components=components)
+    #
+    # @cog_component(
+    #     use_callback_name=False, components=['counter_bump', 'counter_debump']
+    # )
+    # async def counter_callback(self, ctx: ComponentContext):
+    #     await ctx.edit_origin(
+    #         content='Counter: '
+    #         + str(
+    #             int(ctx.origin_message.content[9:])
+    #             + (1 if ctx.component['custom_id'] == 'counter_bump' else -1)
+    #         )
+    #     )
 
     @cog_slash(
         name='poll',

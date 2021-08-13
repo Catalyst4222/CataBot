@@ -120,17 +120,17 @@ class FunCog(commands.Cog):
         )
         await ctx.send('Here you go~', components=[create_actionrow(button)])
 
-    @cog_slash(name='button', description='Trying to figure out buttons')
-    async def slash_button(self, ctx: SlashContext):
-        button = create_button(1, label='hi', custom_id='button_hi')
-        await ctx.send(
-            'Trying to figure out buttons',
-            components=[create_actionrow(button)]
-        )
-
-    @cog_component()
-    async def button_hi(self, ctx: ComponentContext):
-        await ctx.send('Hewwo!')
+    # @cog_slash(name='button', description='Trying to figure out buttons')
+    # async def slash_button(self, ctx: SlashContext):
+    #     button = create_button(1, label='hi', custom_id='button_hi')
+    #     await ctx.send(
+    #         'Trying to figure out buttons',
+    #         components=[create_actionrow(button)]
+    #     )
+    #
+    # @cog_component()
+    # async def button_hi(self, ctx: ComponentContext):
+    #     await ctx.send('Hewwo!')
 
     @commands.command(name='say', hidden=True)
     async def msg_send(self, ctx, channel: Optional[utils.GlobalChannel], *, msg: str):
