@@ -2,11 +2,12 @@ import asyncio
 from os import remove
 from discord.ext import commands
 from youtube_dl import YoutubeDL
-from discord_slash.cog_ext import cog_slash, cog_component
+from discord_slash.cog_ext import cog_slash, cog_component, cog_context_menu
 from discord_slash.utils.manage_components import *
-from discord_slash.context import SlashContext, ComponentContext
+from discord_slash.context import SlashContext, MenuContext
 from contextlib import suppress
 from typing import Optional
+from discord_slash.model import ContextMenuType
 import aiofiles
 
 from . import utils
@@ -144,7 +145,7 @@ class FunCog(commands.Cog):
 
     @commands.command(rest_is_raw=True)
     async def uwuify(self, ctx, *, uwu='uwu'):
-        uwu = uwu.replace('"', '\\"')
+        uwu = "'" + uwu.replace("'", "'\\''") + "'"
         stdout, stderr = await utils.run_cmd(
             f"""echo "{uwu}" | uwuify /dev/stdin"""
         )
@@ -158,6 +159,10 @@ class FunCog(commands.Cog):
                 escape_markdown=True, fix_channel_mentions=True
             ).convert(ctx, stdout.decode())
         )
+
+    @cog_context_menu(name='uwuify', guild_ids=[775035228309422120], target=ContextMenuType.MESSAGE)  # Maybe target 3?
+    async def menu_uwu(self, ctx: MenuContext):
+        await self.uwuify(ctx, uwu=ctx.target_message.content)
 
 
 def setup(bot):
