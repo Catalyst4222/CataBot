@@ -145,7 +145,10 @@ class FunCog(commands.Cog):
 
     @commands.command(rest_is_raw=True)
     async def uwuify(self, ctx, *, uwu='uwu'):
-        uwu = "'" + uwu.replace("'", "'\\''") + "'"
+        uwu = await commands.clean_content(
+                escape_markdown=True, fix_channel_mentions=True
+            ).convert(ctx, uwu)
+#        uwu = "'" + uwu.replace("'", "'\\''") + "'"
         stdout, stderr = await utils.run_cmd(
             f"""echo "{uwu}" | uwuify /dev/stdin"""
         )
@@ -155,13 +158,14 @@ class FunCog(commands.Cog):
 
         await ctx.send(
             '>>> '
-            + await commands.clean_content(
+            + (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, stdout.decode())
+            ).convert(ctx, stdout.decode())).replace('\\\\', '\\')
         )
 
-    @cog_context_menu(name='uwuify', guild_ids=[775035228309422120], target=ContextMenuType.MESSAGE)  # Maybe target 3?
+    @cog_context_menu(name='uwuify', target=ContextMenuType.MESSAGE)  # Maybe target 3?
     async def menu_uwu(self, ctx: MenuContext):
+        ctx.message = ctx.target_message
         await self.uwuify(ctx, uwu=ctx.target_message.content)
 
 
