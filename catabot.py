@@ -49,8 +49,8 @@ with suppress(FileNotFoundError), open('settings.pickle', 'rb') as f:
     pkl.update(pickle.load(f))
 bot.settings = pkl
 
+print('Loading Cogs!')
 bot.load_extension('cogs')
-print('Loaded Cogs!')
 
 
 @bot.command(name='restart', hidden=True)
