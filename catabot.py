@@ -38,7 +38,7 @@ bot = commands.Bot(
 )
 slash = SlashCommand(
     bot,
-    # sync_commands=True
+    sync_commands=True
 )
 
 load_dotenv()
