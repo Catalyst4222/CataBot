@@ -7,7 +7,7 @@
 # from UtilsCog import UtilsCog
 import traceback
 from os import listdir
-from discord.ext.commands import command, is_owner
+from discord.ext.commands import command, is_owner, CommandRegistrationError
 
 # cogs = [
 #     ApplicationCog,
@@ -69,14 +69,17 @@ def setup(bot):
         if cog.endswith('Cog.py'):
             bot.load_extension('cogs.' + cog[:-3])
 
-    bot.add_command(load)
-    bot.add_command(unload)
-    bot.add_command(reload)
+    try:
+        bot.add_command(load)
+        bot.add_command(unload)
+        bot.add_command(reload)
+    except CommandRegistrationError:
+        pass
 
 
 def teardown(bot):
     [bot.remove_cog(cog) for cog in list(bot.cogs)]
 
-    bot.remove_command(load)
-    bot.remove_command(unload)
-    bot.remove_command(reload)
+    # bot.remove_command(load)
+    # bot.remove_command(unload)
+    # bot.remove_command(reload)
