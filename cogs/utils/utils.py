@@ -1,10 +1,12 @@
 import asyncio
-import functools
+from functools import wraps, partial
 import discord
 import discord_slash
 from discord.ext import commands
 from typing import Callable, Coroutine, Any, Union, Optional
 from discord_slash.context import InteractionContext
+from discord_slash.model import CommandObject
+from discord_slash.utils.manage_commands import add_slash_command
 
 
 async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
@@ -44,7 +46,7 @@ class Cache:
 
 
 def cmd_to_func(cmd: commands.Command) -> Callable:
-    @functools.wraps(cmd.callback)
+    @wraps(cmd.callback)
     def inner(*args, **kwargs):
         return cmd.callback(*args, **kwargs)
 
@@ -52,7 +54,7 @@ def cmd_to_func(cmd: commands.Command) -> Callable:
 
 
 def slash_to_func(cmd: discord_slash.model.BaseCommandObject) -> Callable:
-    @functools.wraps(cmd.func)
+    @wraps(cmd.func)
     async def inner(*args, **kwargs):
         return await cmd.func(*args, **kwargs)
 
@@ -89,7 +91,7 @@ class AsyncCache:
         self.result = None
         self.lock = asyncio.Lock()
 
-        functools.wraps(self.coro)(self.__call__.__func__)
+        wraps(self.coro)(self.__call__.__func__)
 
     async def __call__(self, *args, **kwargs):
         async with self.lock:
@@ -145,6 +147,37 @@ def all_have_permissions(**perms):
         return True
 
     return commands.check(predicate)
+
+
+def now(*args, **kwargs):
+    def inner(coro):
+        asyncio.create_task(coro(*args, **kwargs))
+        return promise(coro)
+
+    return inner
+
+
+def promise(coro):
+    def inner(*args, **kwargs):
+        return asyncio.create_task(coro(*args, **kwargs))
+    return inner
+
+
+async def register_slash(bot, command: CommandObject):
+    for guild in command.allowed_guild_ids:
+        await add_slash_command(bot.user.id, bot.TOKEN, guild_id=guild, cmd_name=command.name,
+                                description=command.description, options=command.options)
+
+
+# https://jishaku.readthedocs.io/en/latest/_modules/jishaku/functools.html#executor_function
+def sync_to_thread(func: Callable):
+    @wraps(func)
+    async def inner(*args, **kwargs):
+        loop = asyncio.get_event_loop()
+        internal_function = partial(func, *args, **kwargs)
+        return await loop.run_in_executor(None, internal_function)
+
+    return inner()
 
 
 # https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries/7205107#7205107
