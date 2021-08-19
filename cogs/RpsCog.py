@@ -84,7 +84,7 @@ class RpsCog(commands.Cog):
         }
 
         if choice1 == choice2:
-            await cmp2.send(f"It's a tie! Both players chose {choice1}!")
+            await cmp2.send(f"It's a tie! Both players chose {choice_convert[choice1]}!")
         elif (choice1 - choice2) % 3 == 1:
             await cmp2.send(f'{choice_convert[choice1].title()} beats {choice_convert[choice2]}!\n'
                             f'{cmp1.author.mention} wins!')
