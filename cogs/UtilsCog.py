@@ -58,7 +58,7 @@ class UtilsCog(commands.Cog):
         form = '%B %d, %Y'
         # await ctx.send('This is currently in testing', hidden=True)
 
-        embed = discord.Embed(color=member.color) \
+        embed = discord.Embed(color=member.color, description=member.mention) \
             .set_author(name=str(member), icon_url=member.avatar_url) \
             .set_thumbnail(url=member.avatar_url) \
             .set_footer(text=f'ID: {member.id}')
