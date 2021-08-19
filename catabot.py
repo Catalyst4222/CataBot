@@ -2,8 +2,7 @@ import logging
 import pickle
 from sys import stderr
 from contextlib import suppress
-from os import getenv
-
+from os import getenv, name
 import discord
 from discord.ext import commands
 from discord_slash import SlashCommand
@@ -11,6 +10,10 @@ from dotenv import load_dotenv
 from pretty_help import PrettyHelp, DefaultMenu
 
 from cogs import utils
+
+if name == 'posix':  # Make laptop speeeed!
+    import uvloop
+    uvloop.install()
 
 
 logger = logging.getLogger('discord')
