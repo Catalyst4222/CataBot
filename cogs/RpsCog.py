@@ -33,9 +33,6 @@ from typing import Union
 #         return future.result()  # Returns the value the first call made
 
 
-
-
-
 class RpsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -56,7 +53,6 @@ class RpsCog(commands.Cog):
     #                 )
     # async def rpc(self, ctx: SlashContext, move: str):
     #     ...
-
 
     @commands.command(aliases=['rps'])
     async def rock_paper_scissors(self, ctx: Union[commands.Context, SlashContext]):
@@ -88,25 +84,19 @@ class RpsCog(commands.Cog):
         }
 
         if choice1 == choice2:
-            await ctx.send(f"It's a tie! Both players chose {choice1}!")
+            await cmp2.send(f"It's a tie! Both players chose {choice1}!")
         elif (choice1 - choice2) % 3 == 1:
-            await ctx.send(f'{choice_convert[choice1].title()} beats {choice_convert[choice2]}!\n'
-                           f'{cmp1.author.mention} wins!')
+            await cmp2.send(f'{choice_convert[choice1].title()} beats {choice_convert[choice2]}!\n'
+                            f'{cmp1.author.mention} wins!')
         elif (choice1 - choice2) % 3 == 2:
-            await ctx.send(f'{choice_convert[choice2].title()} beats {choice_convert[choice1]}!\n'
-                           f'{cmp2.author.mention} wins!')
+            await cmp2.send(f'{choice_convert[choice2].title()} beats {choice_convert[choice1]}!\n'
+                            f'{cmp2.author.mention} wins!')
         else:
-            await ctx.send('A logic issue occurred')
+            await cmp2.send('A logic issue occurred')
 
     @cog_subcommand(base='rock', subcommand_group='paper', name='scissors', options=[])
     async def slash_rps(self, ctx: SlashContext):
         await self.rock_paper_scissors(ctx)
-
-
-
-
-
-
 
     # @commands.command(aliases=['rps'])
     # async def rock_paper_scissors(self, ctx: commands.context, move):
