@@ -1,5 +1,5 @@
+import time
 import typing
-
 import discord
 from discord.ext import commands
 from discord_slash.model import ContextMenuType
@@ -12,6 +12,17 @@ class UtilsCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot: commands.Bot = bot
+
+    @commands.command()
+    async def ping(self, ctx):
+        """Pong!"""
+        before = time.monotonic()
+        message = await ctx.send(f"Pong! \nDiscord latency: `{int(self.bot.latency*1000)}`")
+        ping = (time.monotonic() - before) * 1000
+        await message.edit(content="Pong! \n"
+                                   f"Discord latency: `{int(self.bot.latency*1000)}ms`\n"
+                                   f"Edit Latency `{int(ping)}ms`")
+        print(f'Ping {int(ping)}ms')
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
