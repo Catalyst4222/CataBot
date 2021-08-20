@@ -8,6 +8,7 @@ from discord_slash.model import CommandObject
 from discord_slash.utils.manage_commands import add_slash_command
 
 from . import utils
+from .utils.jsk_repl import codeblock_converter, AsyncCodeExecutor, AsyncSender, Scope, jsk_python_result_handling
 
 
 class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
@@ -19,9 +20,10 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
         self._last_result = None
         self.sessions = set()
 
+        self.scope = Scope()
+
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
-
 
     # Entering internet zone
     # Nobody knows how this works
@@ -219,6 +221,126 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
 
         for i in range(times):
             await new_ctx.reinvoke()
+
+    # https://github.com/Gorialis/jishaku/blob/d1d64857aef6926307cd4a883e107586419ce1e2/jishaku/features/python.py#L130
+    @commands.command(aliases=['jsk_repl'])
+    async def jsk_py(self, ctx: commands.Context,):
+        """
+        Direct evaluation of Python code.
+        Adapted largely from Jishaku, with help from the other REPL function
+        I AM A GENIUS
+        """
+
+        # arg_dict = get_var_dict_from_ctx(ctx, Flags.SCOPE_PREFIX)
+        arg_dict = {'ctx': ctx, 'bot': self.bot, 'message': ctx.message, 'guild': ctx.guild, 'channel': ctx.channel,
+                    'author': ctx.author, 'utils': utils, 'slash': self.bot.slash, "_": self._last_result}
+
+        scope = self.scope
+
+        def check(m):
+            return (
+                    m.author.id == ctx.author.id
+                    and m.channel.id == ctx.channel.id
+                    and m.content.startswith('`')
+            )
+
+        self.sessions.add(ctx.channel.id)
+        await ctx.send('Entering JSK REPL')
+
+        while True:
+            try:
+                message = codeblock_converter(
+                    (await self.bot.wait_for(
+                        'message', check=check, timeout=10.0 * 60.0
+                    )).content
+                )
+            except asyncio.TimeoutError:
+                await ctx.send('Exiting REPL session.')
+                self.sessions.remove(ctx.channel.id)
+                break
+
+
+            stdout = io.StringIO()
+            # eval_ish = None
+            try:
+                with redirect_stdout(stdout):
+                    executor = AsyncCodeExecutor(message.content, scope, arg_dict=arg_dict)
+                    async for send, result in AsyncSender(executor):
+                        # if eval_ish is None:
+                        #     eval_ish = True
+                        # elif eval_ish:
+                        #     eval_ish = False
+
+                        if result is None:
+                            continue
+
+                        self._last_result = result
+
+                        # # Can't do this yet:
+                        # await jsk_python_result_handling(ctx, result)
+                        # send(codeblock_converter(
+                        #         (await self.bot.wait_for(
+                        #             'message', check=check, timeout=10.0 * 60.0
+                        #         )).content
+                        #     ).content)
+                        # # Has to be:
+                        send(None)
+                        if inspect.isawaitable(result):
+                            result = await result
+                        await jsk_python_result_handling(ctx, result)
+
+
+            except Exception as e:
+                value = stdout.getvalue()
+                val_fmt = f'`stdout`:\n```py\n{value}\n```'
+                exc_fmt = f'Traceback:\n```py\n{traceback.format_exc()}\n```'
+                try:
+                    if val_fmt is not None:
+                        if len(val_fmt) > 2000:
+                            await ctx.send('Content too big to be printed.')
+                        else:
+                            await ctx.send(val_fmt)
+                    if exc_fmt is not None:
+                        if len(exc_fmt) > 2000:
+                            await ctx.send('Content too big to be printed.')
+                        else:
+                            await ctx.send(exc_fmt)
+
+                except discord.Forbidden:
+                    pass
+                except discord.HTTPException as e:
+                    await ctx.send(f'Unexpected error: `{e}`')
+            else:
+
+                # Trying a modified jsk way
+                value = stdout.getvalue().strip(' \n')
+                if value:
+                    await jsk_python_result_handling(ctx, value)
+
+
+            #     value = stdout.getvalue()
+            #     # if not eval_ish:
+            #     #     result = ''
+            #
+            #     if result is not None:
+            #         fmt = f'```py\n{value}{result}\n```'
+            #         arg_dict['_'] = result
+            #     elif value:
+            #         fmt = f'```py\n{value}\n```'
+            #     else:
+            #         fmt = None
+            #
+            # try:
+            #     if fmt is not None:
+            #         if len(fmt) > 2000:
+            #             await ctx.send('Content too big to be printed.')
+            #         else:
+            #             await ctx.send(fmt)
+            # except discord.Forbidden:
+            #     pass
+            # except discord.HTTPException as e:
+            #     await ctx.send(f'Unexpected error: `{e}`')
+
 
 
 def setup(bot):
