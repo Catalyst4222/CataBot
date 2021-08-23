@@ -35,14 +35,21 @@ class EventCog(commands.Cog):
 
     @listen()
     async def on_slash_command_error(self, ctx, err):
-        if ctx.responded:
-            ctx.send = ctx.message.channel.send
-        await self.error_checker(ctx, err)
+        await self.interaction_checker(ctx, err)
 
     @listen()
     async def on_component_callback_error(self, ctx, err):
+        await self.interaction_checker(ctx, err)
+
+    async def interaction_checker(self, ctx: InteractionContext, err):
         if ctx.responded:
             ctx.send = ctx.message.channel.send
+        elif not ctx.deferred:
+            try:
+                await ctx.defer()
+            except discord.NotFound:
+                ctx.send = ctx.message.channel.send
+
         await self.error_checker(ctx, err)
 
     @staticmethod
