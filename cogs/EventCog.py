@@ -9,7 +9,7 @@ from typing import Union
 listen = commands.Cog.listener
 
 
-class EventCog(commands.Cog):
+class Events(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -117,4 +117,4 @@ class EventCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(EventCog(bot))
+    bot.add_cog(Events(bot))

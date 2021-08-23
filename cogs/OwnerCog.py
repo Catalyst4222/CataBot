@@ -11,7 +11,7 @@ from . import utils
 from .utils.jsk_repl import codeblock_converter, AsyncCodeExecutor, AsyncSender, Scope, jsk_python_result_handling
 
 
-class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
+class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
     """Please don't mess with these, largely meant for the owner"""
 
     def __init__(self, bot: commands.Bot):
@@ -344,4 +344,4 @@ class OwnerCog(commands.Cog, command_attrs=dict(hidden=True)):
 
 
 def setup(bot):
-    bot.add_cog(OwnerCog(bot))
+    bot.add_cog(OwnerThings(bot))

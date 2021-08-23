@@ -12,7 +12,7 @@ from discord_slash.context import SlashContext, ComponentContext
 from . import utils
 
 
-class RoleCog(commands.Cog):
+class Roles(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
@@ -193,4 +193,4 @@ class RoleCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(RoleCog(bot))
+    bot.add_cog(Roles(bot))

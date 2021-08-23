@@ -19,7 +19,7 @@ guild_ids = [
 ]
 
 
-class ButtonCog(commands.Cog):
+class Buttons(commands.Cog):
     """Testing Cog designed for button experiments"""
 
     def __init__(self, bot: commands.Bot):
@@ -159,7 +159,7 @@ class ButtonCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ButtonCog(bot))
+    bot.add_cog(Buttons(bot))
 
 
 def teardown(bot: commands.Bot):

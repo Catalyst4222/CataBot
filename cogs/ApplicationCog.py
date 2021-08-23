@@ -11,7 +11,7 @@ from discord_slash.utils.manage_components import (
 )
 
 
-class ApplicationCog(commands.Cog):
+class Applications(commands.Cog):
     """Commands designed to create special applications, largely beta"""
 
     select_opts = [
@@ -129,4 +129,4 @@ class ApplicationCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(ApplicationCog(bot))
+    bot.add_cog(Applications(bot))

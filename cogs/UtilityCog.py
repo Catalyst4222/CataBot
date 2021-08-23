@@ -7,7 +7,7 @@ from discord_slash.cog_ext import cog_context_menu
 from discord_slash.context import MenuContext
 
 
-class UtilsCog(commands.Cog):
+class Utility(commands.Cog):
     """Helpful commands for handling the bot"""
 
     def __init__(self, bot):
@@ -88,4 +88,4 @@ class UtilsCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(UtilsCog(bot))
+    bot.add_cog(Utility(bot))

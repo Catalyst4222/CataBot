@@ -13,7 +13,7 @@ import aiofiles
 from . import utils
 
 
-class FunCog(commands.Cog):
+class FunThings(commands.Cog):
     """Commands for general fun things"""
 
     def __init__(self, bot):
@@ -170,4 +170,4 @@ class FunCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(FunCog(bot))
+    bot.add_cog(FunThings(bot))

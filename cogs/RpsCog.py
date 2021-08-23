@@ -33,7 +33,7 @@ from typing import Union
 #         return future.result()  # Returns the value the first call made
 
 
-class RpsCog(commands.Cog):
+class RpsGame(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         # self.bus = MiniBus()
@@ -129,4 +129,4 @@ class RpsCog(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(RpsCog(bot))
+    bot.add_cog(RpsGame(bot))
