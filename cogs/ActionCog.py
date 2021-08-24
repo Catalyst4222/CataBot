@@ -26,8 +26,7 @@ def command_maker(name: str, action: str) -> commands.Command:
     # MultiUser = cls.MultiUser
 
     @commands.command(name=name, description=f'Give someone a {name}!')
-    async def inner(ctx, people: commands.Greedy[MaybeUser]):
-        print(people)
+    async def inner(self, ctx, people: commands.Greedy[MaybeUser]):
         await ctx.send(action.format(ctx.author.mention, ' '.join(people)),
                        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=True))
 
@@ -45,6 +44,7 @@ class Actions(commands.Cog):
         if await self.bot.is_owner(ctx.author):
             try:
                 cmd = command_maker(name, action)
+                cmd.cog = self
                 self.bot.add_command(cmd)
             except commands.CommandRegistrationError:
                 await ctx.send('Command was previously registered')
