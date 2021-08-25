@@ -21,16 +21,11 @@ class MaybeUser(commands.Converter):
         return res
 
 
-def command_maker(name: str, action: str) -> commands.Command:
-    """"""
-    # MultiUser = cls.MultiUser
-
-    @commands.command(name=name, description=f'Give someone a {name}!')
+def command_maker(name: str, action: str, author: str) -> commands.Command:
+    @commands.command(name=name, description=f'Give someone a {name}!\nCreated by {author}')
     async def inner(self, ctx, people: commands.Greedy[MaybeUser]):
         await ctx.send(action.format(ctx.author.mention, ' '.join(people)),
                        allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=True))
-
-    assert type(inner) == commands.Command
     return inner
 
 
@@ -39,26 +34,31 @@ class Actions(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    @commands.is_owner()
     async def action_maker(self, ctx, name: str, *, action: str):
-        if await self.bot.is_owner(ctx.author):
-            try:
-                cmd = command_maker(name, action)
-                cmd.cog = self
-                self.bot.add_command(cmd)
-            except commands.CommandRegistrationError:
-                await ctx.send('Command was previously registered')
+        """Make a custom action command
+        The first argument is the command name, the second is the phrase to send
+        The action phrase _must_ have {0} and {1}
+        {0} is replaced with the message author, and {1} with the string the user uses"""
+        try:
+            cmd = command_maker(name, action, ctx.author.name)
+            cmd.cog = self
+            self.bot.add_command(cmd)
+        except commands.CommandRegistrationError:
+            return await ctx.send('Command was previously registered')
 
-        raw = f"""
-        @commands.command(description=f'Give someone a {name}!')
-        async def {name}(self, ctx, people: commands.Greedy[MultiUser]):
-            await ctx.send(f"{action.format("{ctx.author.mention}", "{' '.join(people)}")}",
-                           allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=True))"""
-
-        await ctx.send(f'Command made! Code:\n```py\n{raw}```')
+        await ctx.send('Command made!')
         await ctx.send('Example:\n' +
                        action.format(ctx.author.mention, self.bot.user.mention),
                        allowed_mentions=discord.AllowedMentions.none())
+
+        if await self.bot.is_owner(ctx.author):
+            raw = f"""
+            @commands.command(description=f'Give someone a {name}!')
+            async def {name}(self, ctx, people: commands.Greedy[MultiUser]):
+                await ctx.send(f"{action.format("{ctx.author.mention}", "{' '.join(people)}")}",
+                               allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=True))"""
+
+            await ctx.send(f'Code:\n```py\n{raw}```')
 
 
     @commands.command(description=f'Give someone a hug!')
