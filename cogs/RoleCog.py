@@ -88,7 +88,7 @@ class Roles(commands.Cog):
         base='role',
         subcommand_group='add',
         name='button',
-        description='Make a select that gives roles',
+        description='Make a button that gives roles',
         options=[
             {
                 'name': 'role',
