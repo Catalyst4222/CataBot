@@ -106,7 +106,7 @@ class Roles(commands.Cog):
     )
     @commands.bot_has_permissions(manage_roles=True)
     @commands.has_permissions(manage_roles=True)
-    async def role_button(self, ctx: SlashContext, role: str, create_role: bool):
+    async def role_button(self, ctx: SlashContext, role: str, create_role: bool = False):
         try:
             role = (
                 await utils.get_or_make_role(ctx, role)
