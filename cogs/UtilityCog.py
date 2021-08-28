@@ -45,9 +45,9 @@ class Utility(commands.Cog):
         """Create an invite for the bot.
         \rUse this link to create invites:
         \rhttps://discordapi.com/permissions.html"""
-        msg = f'https://discord.com/api/oauth2/authorize?client_id={self.bot.user.id}&permissions={perms}'
+        msg = f'https://discord.com/api/oauth2/authorize?client_id={self.bot.user.id}&permissions={perms}&scope=bot'
         if slashCommands:
-            msg += '&scope=bot%20applications.commands'
+            msg += '%20applications.commands'
         return await ctx.send(msg)
 
     # Menu, usertype
