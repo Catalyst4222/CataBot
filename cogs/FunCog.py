@@ -114,25 +114,6 @@ class FunThings(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    @cog_slash(name='link', description='just a harmless link')
-    async def rickroll(self, ctx: SlashContext):
-        button = create_button(
-            5, label='Link?', url='https://www.youtube.com/watch?v=dQw4w9WgXcQ'
-        )
-        await ctx.send('Here you go~', components=[create_actionrow(button)])
-
-    # @cog_slash(name='button', description='Trying to figure out buttons')
-    # async def slash_button(self, ctx: SlashContext):
-    #     button = create_button(1, label='hi', custom_id='button_hi')
-    #     await ctx.send(
-    #         'Trying to figure out buttons',
-    #         components=[create_actionrow(button)]
-    #     )
-    #
-    # @cog_component()
-    # async def button_hi(self, ctx: ComponentContext):
-    #     await ctx.send('Hewwo!')
-
     @commands.command(name='say', hidden=True)
     async def msg_send(self, ctx, channel: Optional[utils.GlobalChannel], *, msg: str):
         await (
@@ -149,6 +130,7 @@ class FunThings(commands.Cog):
         uwuify some text
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
+        ctx.message
         uwu = (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
             ).convert(ctx, uwu)).replace("'", "'\\''")
@@ -166,10 +148,6 @@ class FunThings(commands.Cog):
             ).convert(ctx, stdout.decode())).replace('\\\\', '\\')
         )
 
-    @cog_context_menu(name='uwuify', target=ContextMenuType.MESSAGE)  # Maybe target 3?
-    async def menu_uwu(self, ctx: MenuContext):
-        ctx.message = ctx.target_message
-        await self.uwuify(ctx, uwu=ctx.target_message.content)
 
 
 def setup(bot):
