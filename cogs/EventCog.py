@@ -42,14 +42,7 @@ class Events(commands.Cog):
         await self.interaction_checker(ctx, err)
 
     async def interaction_checker(self, ctx: InteractionContext, err):
-        if ctx.responded:
-            ctx.send = ctx.message.channel.send
-        elif not ctx.deferred:
-            try:
-                await ctx.defer()
-            except discord.NotFound:
-                ctx.send = ctx.message.channel.send
-
+        ctx.send = ctx.channel.send
         await self.error_checker(ctx, err)
 
     @staticmethod
