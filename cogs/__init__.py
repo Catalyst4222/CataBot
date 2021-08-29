@@ -68,6 +68,7 @@ def setup(bot):
     for cog in listdir('./cogs'):
         if cog.endswith('Cog.py'):
             bot.load_extension('cogs.' + cog[:-3])
+            print(f'{cog} loaded!')
 
     try:
         bot.add_command(load)
