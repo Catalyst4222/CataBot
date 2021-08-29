@@ -287,6 +287,7 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
                         send(None)
                         if inspect.isawaitable(result):
                             result = await result
+                        arg_dict['_'] = result
                         await jsk_python_result_handling(ctx, result)
 
 
