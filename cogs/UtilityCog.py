@@ -3,7 +3,7 @@ import typing
 import discord
 from discord.ext import commands
 from discord_slash.model import ContextMenuType
-from discord_slash.cog_ext import cog_context_menu
+from discord_slash.cog_ext import cog_context_menu, cog_slash
 from discord_slash.context import MenuContext
 
 
@@ -85,6 +85,39 @@ class Utility(commands.Cog):
                         inline=False)
 
         await ctx.send(embed=embed)
+
+    @cog_slash(name='timestamp', description='Get a formatted timestamp from unix time or a discord id', options=[
+                   {
+                        'name': 'type',
+                        'description': 'The type of timestamp or id the number is',
+                        'required': True,
+                        'type': 3,
+                        'choices': [
+                            {'name': 'unix', 'value': 'unix'},
+                            {'name': 'discord', 'value': 'discord'},
+                        ]
+                   },
+                   {
+                       'name': 'number',
+                       'description': 'The number to get the timestamp of',
+                       'required': True,
+                       'type': 3,
+                   }
+               ], connector={'type': 'method'}
+               )
+    async def carbon_date(self, ctx, method, number: str):
+        if not number.isnumeric():
+            return await ctx.send('number must be a number!')
+        number = int(number)
+
+        if method == 'discord':
+            number = int((number / 4194304 + 1420070400000) / 1000)
+
+
+        await ctx.send(f'Mode: {method}\n'
+                       f'Static: <t:{number}:F>\n'
+                       f'Relative: <t:{number}:R>')
+        ...
 
 
 def setup(bot):
