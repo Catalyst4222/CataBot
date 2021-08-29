@@ -145,6 +145,10 @@ class FunThings(commands.Cog):
 
     @commands.command(rest_is_raw=True)
     async def uwuify(self, ctx, *, uwu='uwu'):
+        """
+        uwuify some text
+        credit: https://github.com/Daniel-Liu-c0deb0t/uwu
+        """
         uwu = (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
             ).convert(ctx, uwu)).replace("'", "'\\''")
