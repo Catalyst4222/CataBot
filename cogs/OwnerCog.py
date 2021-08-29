@@ -21,6 +21,7 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         self.sessions = set()
 
         self.scope = Scope()
+        self.store_scope = True
 
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
@@ -222,6 +223,15 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         for i in range(times):
             await new_ctx.reinvoke()
 
+
+    @commands.command()
+    async def toggle_scopes(self, ctx, state: Optional[bool] = None):
+        if state is None:
+            self.store_scope = not self.store_scope
+        else:
+            self.store_scope = state
+        await ctx.send('State changed')
+
     # https://github.com/Gorialis/jishaku/blob/d1d64857aef6926307cd4a883e107586419ce1e2/jishaku/features/python.py#L130
     @commands.command(aliases=['jsk_repl'])
     async def jsk_py(self, ctx: commands.Context,):
@@ -235,7 +245,10 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         arg_dict = {'ctx': ctx, 'bot': self.bot, 'message': ctx.message, 'guild': ctx.guild, 'channel': ctx.channel,
                     'author': ctx.author, 'utils': utils, 'slash': self.bot.slash, "_": self._last_result}
 
-        scope = self.scope
+        if self.store_scope:
+            scope = self.scope
+        else:
+            scope = Scope
 
         def check(m):
             return (
