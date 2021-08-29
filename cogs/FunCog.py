@@ -145,12 +145,11 @@ class FunThings(commands.Cog):
 
     @commands.command(rest_is_raw=True)
     async def uwuify(self, ctx, *, uwu='uwu'):
-        uwu = await commands.clean_content(
+        uwu = (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, uwu)
-#        uwu = "'" + uwu.replace("'", "'\\''") + "'"
+            ).convert(ctx, uwu)).replace("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
-            f"""echo "{uwu}" | uwuify /dev/stdin"""
+            f"""echo '{uwu}' | uwuify /dev/stdin"""
         )
 
         if stderr:
