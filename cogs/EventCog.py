@@ -70,6 +70,12 @@ class Events(commands.Cog):
         elif isinstance(error, commands.NotOwner):
             await ctx.send('Only the owner can run this command')
 
+        elif isinstance(error, commands.BotMissingPermissions):
+            await ctx.send(
+                "The bot is missing the following permissions:\n"
+                + '\n'.join(error.missing_perms)
+            )
+
         elif isinstance(error, commands.MissingPermissions):
             await ctx.send(
                 "You're missing the following permissions:\n"
