@@ -257,6 +257,11 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
                     and m.content.startswith('`')
             )
 
+        if ctx.channel.id in self.sessions:
+            return await ctx.send(
+                'Already running a REPL session in this channel. Exit it with `quit`.'
+            )
+
         self.sessions.add(ctx.channel.id)
         await ctx.send('Entering JSK REPL')
 
