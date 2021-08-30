@@ -155,17 +155,17 @@ class FunThings(commands.Cog):
         'required': True,
         'type': 3
     }])
-    async def uwuify(self, ctx: InteractionContext, uwu):
+    async def uwuify(self, ctx: InteractionContext, text):
         """
         uwuify some text
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
-        ctx.message = uwu
-        uwu = (await commands.clean_content(
+        ctx.message = text
+        text = (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, uwu)).replace("'", "'\\''")
+            ).convert(ctx, text)).replace("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
-            f"""echo '{uwu}' | uwuify /dev/stdin"""
+            f"""echo '{text}' | uwuify /dev/stdin"""
         )
 
         if stderr:
@@ -180,7 +180,7 @@ class FunThings(commands.Cog):
 
     @cog_context_menu(name='uwuifier', target=ContextMenuType.MESSAGE)  # Maybe target 3?
     async def menu_uwu(self, ctx: MenuContext):
-        await self.uwuify(ctx, uwu=ctx.target_message.content)
+        await self.uwuify.func(ctx, text=ctx.target_message.content)
 
 
 def setup(bot):
