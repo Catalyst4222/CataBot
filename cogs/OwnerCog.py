@@ -277,6 +277,9 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
                 self.sessions.remove(ctx.channel.id)
                 break
 
+            if message in ('quit', 'exit', 'exit()'):
+                self.sessions.remove(ctx.channel.id)
+                return await ctx.send('Exiting.')
 
             stdout = io.StringIO()
             # eval_ish = None
