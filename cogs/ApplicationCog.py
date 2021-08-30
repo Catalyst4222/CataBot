@@ -68,8 +68,7 @@ class Applications(commands.Cog):
         async with aiohttp.ClientSession() as session:
             async with session.post(url, json=api_json, headers=headers) as response:
                 res = json.loads(await response.text())
-                code = res['code']
-                return code
+                return res['code']
 
     async def request(self, ctx: InteractionContext, activity_type: int) -> int:
         url = (

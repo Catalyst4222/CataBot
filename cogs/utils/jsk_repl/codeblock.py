@@ -38,8 +38,7 @@ def codeblock_converter(argument):
             in_language = True
             language.append(char)
         elif in_language:  # we're in the language after the first non-backtick character
-            if char != '\n':
-                language.append(char)
+            language.append(char)
 
         last.append(char)
 

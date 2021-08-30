@@ -220,12 +220,13 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         new_ctx = await self.bot.get_context(msg, cls=type(ctx))
         new_ctx._db = ctx._db
 
-        for i in range(times):
+        for _ in range(times):
             await new_ctx.reinvoke()
 
 
     @commands.command()
     async def toggle_scopes(self, ctx, state: Optional[bool] = None):
+        # sourcery skip: assign-if-exp
         if state is None:
             self.store_scope = not self.store_scope
         else:

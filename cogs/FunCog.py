@@ -95,10 +95,9 @@ class FunThings(commands.Cog):
         if emoji.isdigit():
             if ani is not None:
                 await ctx.send(f'https://cdn.discordapp.com/emojis/{emoji}.png')
-                return
             else:
                 await ctx.send(f'https://cdn.discordapp.com/emojis/{emoji}.gif')
-                return
+            return
         await ctx.send(
             'Unable to get the image. Once you double-checked that everything is right, yell at Cata'
         )

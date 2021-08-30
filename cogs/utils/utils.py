@@ -160,6 +160,7 @@ def now(*args, **kwargs):
 def promise(coro):
     def inner(*args, **kwargs):
         return asyncio.create_task(coro(*args, **kwargs))
+
     return inner
 
 
@@ -183,14 +184,13 @@ def sync_to_thread(func: Callable):
 # https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries/7205107#7205107
 def merge(a, b, path=None):
     """merges b into a"""
-    if path is None: path = []
+    if path is None:
+        path = []
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
                 merge(a[key], b[key], path + [str(key)])
-            elif a[key] == b[key]:
-                pass  # same leaf value
-            else:
+            elif a[key] != b[key]:
                 raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
         else:
             a[key] = b[key]

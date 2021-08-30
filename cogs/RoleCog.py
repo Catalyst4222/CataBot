@@ -54,10 +54,7 @@ class Roles(commands.Cog):
         except commands.RoleNotFound:
             return await ctx.send('One or more roles failed to convert')
 
-        options = []
-        for role in roles:
-            options.append(create_select_option(role.name, role.name))
-
+        options = [create_select_option(role.name, role.name) for role in roles]
         select = create_select(
             options=options,
             custom_id='select_roles',
