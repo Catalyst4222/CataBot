@@ -19,7 +19,7 @@ class FunThings(commands.Cog):
     @cog_slash(name='avatar', options=[{
         'name': 'member',
         'description': 'The user you want to get the avatar of',
-        'required': True,
+        'required': False,
         'type': 6,
     }])
     async def avatar(self, ctx: SlashContext, member: discord.Member = None):
@@ -27,7 +27,7 @@ class FunThings(commands.Cog):
         if member is None:
             member = ctx.author
         avatar_url = member.avatar_url
-        await ctx.send(avatar_url)
+        await ctx.send(str(avatar_url))
 
 
     # # Currently unfixable
