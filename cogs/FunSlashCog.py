@@ -1,5 +1,7 @@
 import asyncio
 from os import remove
+
+import discord
 from discord.ext import commands
 from youtube_dl import YoutubeDL
 from discord_slash.cog_ext import cog_slash, cog_context_menu
@@ -160,10 +162,16 @@ class FunThings(commands.Cog):
         uwuify some text
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
-        ctx.message = text
+        message = object
+        message._raw_channel_mentions = []
+        message.raw_mentions = []
+        message.content = text
+        message.raw_role_mentions = []
+        ctx.message = message
+
         text = (await commands.clean_content(
-                escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, text)).replace("'", "'\\''")
+                    escape_markdown=True, fix_channel_mentions=True
+                ).convert(ctx, text)).replace("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
             f"""echo '{text}' | uwuify /dev/stdin"""
         )
@@ -175,12 +183,13 @@ class FunThings(commands.Cog):
             '>>> '
             + (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, stdout.decode())).replace('\\\\', '\\')
+            ).convert(ctx, stdout.decode())).replace('\\\\', '\\'),
+            allowed_mentions=discord.AllowedMentions.none()
         )
 
     @cog_context_menu(name='uwuifier', target=ContextMenuType.MESSAGE)  # Maybe target 3?
     async def menu_uwu(self, ctx: MenuContext):
-        await self.uwuify.func(ctx, text=ctx.target_message.content)
+        await self.uwuify.func(self, ctx, text=ctx.target_message.content)
 
 
 def setup(bot):
