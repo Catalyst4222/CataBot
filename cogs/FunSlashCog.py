@@ -172,7 +172,8 @@ class FunThings(commands.Cog):
 
         await ctx.send(
             '>>> '
-            + discord.utils.escape_markdown(stdout.decode()).replace('\\\\', '\\'),
+            + discord.utils.escape_markdown(stdout.decode()),
+            # .replace('\\\\', '\\')
             allowed_mentions=discord.AllowedMentions.none()
         )
 
