@@ -162,9 +162,7 @@ class FunThings(commands.Cog):
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
 
-        text = (await commands.clean_content(
-                    escape_markdown=True, fix_channel_mentions=True
-                ).convert(ctx, text)).replace("'", "'\\''")
+        text = discord.utils.escape_markdown(text).replace("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
             f"""echo '{text}' | uwuify /dev/stdin"""
         )
