@@ -163,7 +163,7 @@ class FunThings(commands.Cog):
         """
 
         # text = discord.utils.escape_markdown(text).replace("'", "'\\''")
-        text = text("'", "'\\''")
+        text = text.replace("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
             f"""echo '{text}' | uwuify /dev/stdin"""
         )
