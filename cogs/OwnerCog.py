@@ -61,6 +61,7 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
             'slash': self.bot.slash,
         }
 
+        env.update(self.scope.globals, **self.scope.locals)
         env.update(globals())
 
         body = self.cleanup_code(body)
@@ -108,6 +109,8 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
             'utils': utils,  # I made this!
             'slash': self.bot.slash,
         }
+
+        variables.update(self.scope.globals, **self.scope.locals)
 
         if ctx.channel.id in self.sessions:
             await ctx.send(
