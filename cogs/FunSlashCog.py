@@ -162,7 +162,8 @@ class FunThings(commands.Cog):
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
 
-        text = discord.utils.escape_markdown(text).replace("'", "'\\''")
+        # text = discord.utils.escape_markdown(text).replace("'", "'\\''")
+        text = text("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
             f"""echo '{text}' | uwuify /dev/stdin"""
         )
@@ -173,7 +174,7 @@ class FunThings(commands.Cog):
         await ctx.send(
             '>>> '
             + discord.utils.escape_markdown(stdout.decode()) \
-            .replace('\\\\', '\\')
+            # .replace('\\\\', '\\')
             ,
             allowed_mentions=discord.AllowedMentions.none()
         )
