@@ -161,12 +161,6 @@ class FunThings(commands.Cog):
         uwuify some text
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
-        message = object()
-        message._raw_channel_mentions = []
-        message.raw_mentions = []
-        message.content = text
-        message.raw_role_mentions = []
-        ctx.message = message
 
         text = (await commands.clean_content(
                     escape_markdown=True, fix_channel_mentions=True
