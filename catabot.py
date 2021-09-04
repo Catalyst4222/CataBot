@@ -15,6 +15,17 @@ if name == 'posix':  # Make laptop speeeed!
     import uvloop
     uvloop.install()
 
+# from cogs import utils
+
+# TODO
+# remove bad commands
+# Better subcommands
+# continue on menus (steal dyno's profile thing)
+# Guild autorole
+# prevent fail in youtubedl
+# docstring action commands
+# special thing for rps
+
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
@@ -41,7 +52,8 @@ bot = commands.Bot(
 )
 slash = SlashCommand(
     bot,
-    sync_commands=True
+    sync_commands=True,
+    # delete_from_unused_guilds=True,
 )
 
 load_dotenv()

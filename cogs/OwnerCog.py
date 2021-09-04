@@ -245,6 +245,11 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         I AM A GENIUS
         """
 
+        # TODO (improbable):
+        #  prevent showing last thing of yield set
+        #  prevent extra return values
+        #  Be able to send custom things to yields
+
         # arg_dict = get_var_dict_from_ctx(ctx, Flags.SCOPE_PREFIX)
         arg_dict = {'ctx': ctx, 'bot': self.bot, 'message': ctx.message, 'guild': ctx.guild, 'channel': ctx.channel,
                     'author': ctx.author, 'utils': utils, 'slash': self.bot.slash, "_": self._last_result}
