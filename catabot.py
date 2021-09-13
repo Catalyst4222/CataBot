@@ -1,5 +1,6 @@
 import logging
 import pickle
+import time
 from sys import stderr
 from contextlib import suppress
 from os import getenv, name
@@ -25,6 +26,7 @@ if name == 'posix':  # Make laptop speeeed!
 # prevent fail in youtubedl
 # docstring action commands
 # special thing for rps
+# MIT licence
 
 
 logger = logging.getLogger('discord')
@@ -88,6 +90,7 @@ async def restart(ctx):
 
 @bot.event
 async def on_ready():
+    bot.ready_time = time.time()
     print('Ready!')
 
 
@@ -101,6 +104,7 @@ guild_ids = [
 
 
 print('Starting bot')
+bot.start_time = time.time()
 try:
     bot.run(bot.TOKEN)
 finally:
