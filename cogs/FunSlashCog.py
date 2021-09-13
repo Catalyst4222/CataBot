@@ -12,7 +12,7 @@ from discord_slash.model import ContextMenuType
 from . import utils
 
 
-class FunThings(commands.Cog):
+class FunSlashThings(commands.Cog):
     """Commands for general fun things"""
 
     def __init__(self, bot):
@@ -163,7 +163,7 @@ class FunThings(commands.Cog):
         """
 
         # text = discord.utils.escape_markdown(text).replace("'", "'\\''")
-        text = text("'", "'\\''")
+        text = text.replace("'", "'\\''")
         stdout, stderr = await utils.run_cmd(
             f"""echo '{text}' | uwuify /dev/stdin"""
         )
@@ -185,4 +185,4 @@ class FunThings(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(FunThings(bot))
+    bot.add_cog(FunSlashThings(bot))

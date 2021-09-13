@@ -188,6 +188,31 @@ class Roles(commands.Cog):
         await user.add_roles(*roles)
         await ctx.send('Roles added!', hidden=True)
 
+    # @cog_subcommand(
+    #     base='role',
+    #     name='auto',
+    #     description='Make a select that gives roles',
+    #     options=[{
+    #             'name': 'role',
+    #             'description': 'The role you want to give new members when they join the server',
+    #             'required': False,
+    #             'type': 8,
+    #     }])
+    # @utils.all_have_permissions(manage_roles=True)
+    # async def autorole(self, ctx: SlashContext, role: discord.Role = None):
+    #     guild_settings = self.bot.settings.get(ctx.guild_id)
+    #     if guild_settings is None:
+    #         self.bot.settings[ctx.guild_id] = guild_settings
+    #
+    #     # if not isinstance(role, (discord.Role, type(None))):
+    #     #     try:
+    #     #         role = commands.RoleConverter().convert(ctx, role)
+    #     #     except commands.RoleNotFound:
+    #     #         return await ctx.send('Role not found')
+    #
+    #     guild_settings['autorole'] = role
+    #     await ctx.send('Role set!')
+
 
 def setup(bot):
     bot.add_cog(Roles(bot))

@@ -1,5 +1,6 @@
 import logging
 import pickle
+import time
 from sys import stderr
 from contextlib import suppress
 from os import getenv, name
@@ -14,6 +15,18 @@ from cogs import utils
 if name == 'posix':  # Make laptop speeeed!
     import uvloop
     uvloop.install()
+
+# from cogs import utils
+
+# TODO
+# remove bad commands
+# Better subcommands
+# continue on menus (steal dyno's profile thing)
+# Guild autorole
+# prevent fail in youtubedl
+# docstring action commands
+# special thing for rps
+# MIT licence
 
 
 logger = logging.getLogger('discord')
@@ -41,7 +54,8 @@ bot = commands.Bot(
 )
 slash = SlashCommand(
     bot,
-    sync_commands=True
+    sync_commands=True,
+    # delete_from_unused_guilds=True,
 )
 
 load_dotenv()
@@ -76,6 +90,7 @@ async def restart(ctx):
 
 @bot.event
 async def on_ready():
+    bot.ready_time = time.time()
     print('Ready!')
 
 
@@ -89,6 +104,7 @@ guild_ids = [
 
 
 print('Starting bot')
+bot.start_time = time.time()
 try:
     bot.run(bot.TOKEN)
 finally:

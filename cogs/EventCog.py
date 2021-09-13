@@ -112,7 +112,10 @@ class Events(commands.Cog):
             traceback.print_exception(
                 type(error), error, error.__traceback__, file=sys.stderr
             )
-            await ctx.send(f'`{type(error).__name__}: {error}`')
+            try:
+                await ctx.send(f'`{type(error).__name__}: {error}`')
+            except Exception as e:
+                raise e from error
 
 
 def setup(bot):
