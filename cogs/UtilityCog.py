@@ -135,11 +135,11 @@ class Utility(commands.Cog):
             .set_author(name=self.bot.user.display_name,
                         icon_url=str(self.bot.user.avatar_url)) \
             .set_footer(text=datetime.datetime.now().time()) \
-            .add_field(name='Latency', value=f'{self.bot.latency:.2f} ms') \
+            .add_field(name='Latency', value=f'{self.bot.latency:.2f} seconds') \
             .add_field(name='Time since start', value=self.sec_to_time(self.bot.start_time)) \
             .add_field(name='Time since reconnect', value=self.sec_to_time(self.bot.start_time))
 
-        uwu = (await run_cmd('echo "Hello World" | uwuify /dev/stdin'))[1] == 'hewwo wowwd'
+        uwu = (await run_cmd('echo "Hello World" | uwuify /dev/stdin'))[1] == b'hewwo wowwd'
         embed.add_field(name='uwuifier', value=('On' if uwu else 'Off') + 'line')
 
         await ctx.send(embed=embed)
