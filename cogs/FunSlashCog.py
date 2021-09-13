@@ -12,7 +12,7 @@ from discord_slash.model import ContextMenuType
 from . import utils
 
 
-class FunThings(commands.Cog):
+class FunSlashThings(commands.Cog):
     """Commands for general fun things"""
 
     def __init__(self, bot):
@@ -185,4 +185,4 @@ class FunThings(commands.Cog):
 
 
 def setup(bot):
-    bot.add_cog(FunThings(bot))
+    bot.add_cog(FunSlashThings(bot))
