@@ -162,8 +162,8 @@ class FunSlashThings(commands.Cog):
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
 
-        # text = discord.utils.escape_markdown(text).replace("'", "'\\''")
-        text = text.replace("'", "'\\''")
+        text = discord.utils.escape_markdown(text).replace("'", "'\\''")
+
         stdout, stderr = await utils.run_cmd(
             f"""echo '{text}' | uwuify /dev/stdin"""
         )
@@ -171,13 +171,10 @@ class FunSlashThings(commands.Cog):
         if stderr:
             raise OSError(stderr.decode())
 
-        await ctx.send(
-            '>>> '
-            + discord.utils.escape_markdown(stdout.decode()) \
-            # .replace('\\\\', '\\')
-            ,
-            allowed_mentions=discord.AllowedMentions.none()
-        )
+        postuwu = stdout.decode()
+        postuwu = discord.utils.escape_markdown(postuwu)
+        postuwu = postuwu.replace('\\\\\\', '').replace('\\\\', '\\')
+        await ctx.send('>>> ' + postuwu)
 
     @cog_context_menu(name='uwuifier', target=ContextMenuType.MESSAGE)  # Maybe target 3?
     async def menu_uwu(self, ctx: MenuContext):
