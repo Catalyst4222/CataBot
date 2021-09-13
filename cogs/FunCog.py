@@ -129,10 +129,10 @@ class FunThings(commands.Cog):
         uwuify some text
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
-        ctx.message
         uwu = (await commands.clean_content(
                 escape_markdown=True, fix_channel_mentions=True
             ).convert(ctx, uwu)).replace("'", "'\\''")
+        #await ctx.send(uwu)
         stdout, stderr = await utils.run_cmd(
             f"""echo '{uwu}' | uwuify /dev/stdin"""
         )
@@ -140,11 +140,16 @@ class FunThings(commands.Cog):
         if stderr:
             raise OSError(stderr.decode())
 
+        postuwu = stdout.decode()
+        #await ctx.send(postuwu)
+        postuwu = await commands.clean_content(escape_markdown=True) \
+                                .convert(ctx, postuwu)
+        #await ctx.send(postuwu)
+        postuwu = postuwu.replace('\\\\\\', '').replace('\\\\', '\\')
+        #postuwu = postuwu.replace('\\\\', '')
         await ctx.send(
-            '>>> '
-            + (await commands.clean_content(
-                escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, stdout.decode())).replace('\\\\', '\\')
+            '>>> ' + postuwu
+            
         )
 
 
