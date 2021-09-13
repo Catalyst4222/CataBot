@@ -123,6 +123,7 @@ class FunThings(commands.Cog):
         with suppress(discord.Forbidden):
             await ctx.message.delete()
 
+    # noinspection SpellCheckingInspection
     @commands.command(rest_is_raw=True)
     async def uwuify(self, ctx, *, uwu='uwu'):
         """
@@ -130,9 +131,9 @@ class FunThings(commands.Cog):
         credit: https://github.com/Daniel-Liu-c0deb0t/uwu
         """
         uwu = (await commands.clean_content(
-                escape_markdown=True, fix_channel_mentions=True
-            ).convert(ctx, uwu)).replace("'", "'\\''")
-        #await ctx.send(uwu)
+            escape_markdown=True, fix_channel_mentions=True
+        ).convert(ctx, uwu)).replace("'", "'\\''")
+
         stdout, stderr = await utils.run_cmd(
             f"""echo '{uwu}' | uwuify /dev/stdin"""
         )
@@ -141,17 +142,9 @@ class FunThings(commands.Cog):
             raise OSError(stderr.decode())
 
         postuwu = stdout.decode()
-        #await ctx.send(postuwu)
-        postuwu = await commands.clean_content(escape_markdown=True) \
-                                .convert(ctx, postuwu)
-        #await ctx.send(postuwu)
+        postuwu = await commands.clean_content(escape_markdown=True).convert(ctx, postuwu)
         postuwu = postuwu.replace('\\\\\\', '').replace('\\\\', '\\')
-        #postuwu = postuwu.replace('\\\\', '')
-        await ctx.send(
-            '>>> ' + postuwu
-            
-        )
-
+        await ctx.send('>>> ' + postuwu)
 
 
 def setup(bot):
