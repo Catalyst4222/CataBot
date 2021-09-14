@@ -13,6 +13,9 @@ BASIC_OPTS = {
     'quiet': True
 }
 
+FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                  'options': '-vn'}
+
 
 class BasicYouTubeDLSource(discord.FFmpegPCMAudio):
     """
@@ -25,10 +28,85 @@ class BasicYouTubeDLSource(discord.FFmpegPCMAudio):
         super().__init__(info['url'])
 
 
+def youtube_to_ffmpeg(url, download: bool = False):
+    ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)
+    info = ytdl.extract_info(url, download=download)
+    return info['url']
+
+
+class Queue:
+    __slots__ = ('bot', 'voice_channel', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue')
+
+    def __init__(self, bot, ctx: commands.Context):
+        self.bot: commands.Bot = bot
+        self.voice_channel: discord.VoiceClient = ctx.guild.voice_client
+        self.bound_channel: discord.TextChannel = ctx.channel
+        self.guild: discord.Guild = ctx.guild
+        self.queue = []
+        self.loop: bool = False
+        self.loopqueue: bool = False
+
+    @property
+    def _create_task(self):
+        return self.bot.loop.create_task
+
+    def add(self, song):
+        self.queue.append(song)
+
+    def skip(self, amount=1):
+        [self.queue.pop(0) for _ in range(amount-1)]
+        self.voice_channel.stop()
+
+    # def _get_player(self, source: str, type_: str):
+    #     if type_ == 'uri':
+    #         return discord.FFmpegPCMAudio(source)
+    #     elif type_ == 'url':
+    #         return BasicYouTubeDLSource(source)
+    #     else:
+    #         raise ValueError(f'Unexpected value: {type_ }')
+
+
+
+    def after(self, error=None):
+        # raise NotImplementedError
+        if error is not None:
+            raise error
+
+        if not self.loop:
+            finished = self.queue.pop(0)
+            self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
+            if self.loopqueue:
+                self.queue.append(finished)
+
+        if self.queue:
+            source = self.queue[0]
+            self._create_task(self.bound_channel.send(f'Now playing {source}'))
+
+
+            self.guild.voice_client.play(
+                discord.PCMVolumeTransformer(
+                    # self._get_player(*source)
+                    discord.FFmpegPCMAudio(
+                        source, **FFMPEG_OPTIONS
+                    )
+                ),
+                after=self.after
+            )
+        # else:
+        #     self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
+
+
+
+
+
+
 class VoiceFeature(commands.Cog):
     """
     Feature containing the core voice-related commands
     """
+    def __init__(self, bot):
+        self.bot: commands.Bot = bot
+        self.queues: dict[int, Queue] = {}
 
     @staticmethod
     async def voice_check(ctx: commands.Context):
@@ -121,25 +199,25 @@ class VoiceFeature(commands.Cog):
             await voice.move_to(destination)
         else:
             await destination.connect(reconnect=True)
+        self.queues[ctx.channel.id] = Queue(self.bot, ctx)
 
         await ctx.send(f"Connected to {destination.mention}.")
 
-    @commands.command(name="disconnect", aliases=["dc", "fuckoff"])
+    @commands.command(name="disconnect", aliases=["dc", "fuckoff", "leave"])
     async def jsk_vc_disconnect(self, ctx: commands.Context):
         """
         Disconnects from the voice channel in this guild, if there is one.
         """
-
-        if not self.connected_check(ctx):
-            return await ctx.send("Not connected to a voice channel in this guild.")
-
         voice = ctx.guild.voice_client
+
+        if not voice:
+            return await ctx.send("Not connected to a voice channel in this guild.")
 
         await voice.disconnect()
         await ctx.send(f"Disconnected from {voice.channel.mention}.")
 
-    @commands.command(name="stop")
-    async def jsk_vc_stop(self, ctx: commands.Context):
+    @commands.command(name="skip")
+    async def jsk_vc_skip(self, ctx: commands.Context, amount=1):
         """
         Stops running an audio source, if there is one.
         """
@@ -150,6 +228,7 @@ class VoiceFeature(commands.Cog):
         voice = ctx.guild.voice_client
 
         voice.stop()
+        self.queues[ctx.channel.id].skip(amount)
         await ctx.send(f"Stopped playing audio in {voice.channel.mention}.")
 
     @commands.command(name="pause")
@@ -175,8 +254,8 @@ class VoiceFeature(commands.Cog):
         Resumes a running audio source, if there is one.
         """
 
-        if not self.playing_check(ctx):
-            return await ctx.send("The voice client in this guild is not playing anything.")
+        if not self.connected_check(ctx):
+            return await ctx.send("There is no voice client in this guild.")
 
         voice = ctx.guild.voice_client
 
@@ -208,7 +287,7 @@ class VoiceFeature(commands.Cog):
         await ctx.send(f"Volume set to {volume * 100:.2f}%")
 
     @commands.command(name="play", aliases=["play_local"])
-    async def jsk_vc_play(self, ctx: commands.Context, *, uri: str):
+    async def jsk_vc_play(self, ctx: commands.Context, *, uri: str):  # TODO make uri optional to unpause
         """
         Plays audio direct from a URI.
         Can be either a local file or an audio resource on the internet.
@@ -219,20 +298,21 @@ class VoiceFeature(commands.Cog):
 
         voice = ctx.guild.voice_client
 
-        if voice.is_playing():
-            voice.stop()
+        # if voice.is_playing():
+        #     voice.stop()
 
         # remove embed maskers if present
         uri = uri.lstrip("<").rstrip(">")
 
-        voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(uri)))
-        await ctx.send(f"Playing in {voice.channel.mention}.")
+        queue = self.queues[ctx.channel.id]
+        queue.add(uri)
 
+        if not voice.is_playing():
+            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(uri, **FFMPEG_OPTIONS)), after=queue.after)
+            await ctx.send(f"Playing in {voice.channel.mention}.")
+        else:
+            await ctx.send('File added to queue')
 
-class YouTubeFeature(VoiceFeature):
-    """
-    Feature containing the youtube-dl command
-    """
 
     @commands.command(parent="jsk_voice", name="youtube_dl", aliases=["youtubedl", "ytdl", "yt"])
     async def jsk_vc_youtube_dl(self, ctx: commands.Context, *, url: str):
@@ -240,22 +320,31 @@ class YouTubeFeature(VoiceFeature):
         Plays audio from youtube_dl-compatible sources.
         """
 
-        if not VoiceFeature.connected_check(ctx):
-            return await ctx.send("Not connected to a voice channel in this guild.")
+        if not self.connected_check(ctx):
+            await self.jsk_vc_join(ctx)
 
-        if not youtube_dl:
-            return await ctx.send("youtube_dl is not installed.")
+        # if not youtube_dl:
+        #     return await ctx.send("youtube_dl is not installed.")
 
         voice = ctx.guild.voice_client
 
-        if voice.is_playing():
-            voice.stop()
+        # if voice.is_playing():
+        #     voice.stop()
 
         # remove embed maskers if present
         url = url.lstrip("<").rstrip(">")
 
-        voice.play(discord.PCMVolumeTransformer(BasicYouTubeDLSource(url)))
-        await ctx.send(f"Playing in {voice.channel.mention}.")
+        uri = youtube_to_ffmpeg(url)
+
+        queue = self.queues[ctx.channel.id]
+        queue.add(uri)
+
+        if not voice.is_playing():
+            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(uri, **FFMPEG_OPTIONS)), after=queue.after)
+            await ctx.send(f"Playing in {voice.channel.mention}.")
+        else:
+            await ctx.send('File added to queue')
+
 
 def setup(bot):
-    bot.add_cog(YouTubeFeature(bot))
+    bot.add_cog(VoiceFeature(bot))
