@@ -361,7 +361,7 @@ class VoiceFeature(commands.Cog):
 
         await ctx.send(f'Queue loop set to {queue.loopqueue}')
 
-    @commands.command(name="play", aliases=["play_local"])
+    @commands.command(name="uri", aliases=["play_from_uri"])
     async def jsk_vc_play(self, ctx: commands.Context, *, uri: Optional[str]):
         """
         Plays audio direct from a URI.
@@ -391,7 +391,7 @@ class VoiceFeature(commands.Cog):
             await ctx.send('File added to queue')
 
 
-    @commands.command(parent="jsk_voice", name="youtube_dl", aliases=["youtubedl", "ytdl", "yt"])
+    @commands.command(parent="jsk_voice", name="play", aliases=["youtubedl", "p", "yt"])
     async def jsk_vc_youtube_dl(self, ctx: commands.Context, *, url: str):
         """
         Plays audio from youtube_dl-compatible sources.
