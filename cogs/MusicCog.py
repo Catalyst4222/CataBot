@@ -65,10 +65,10 @@ class Queue:
     #     else:
     #         raise ValueError(f'Unexpected value: {type_ }')
 
-    def cleanup(self):
+    async def cleanup(self):
         self.queue = []
         self.guild.voice_client.stop()
-        self.guild.voice_client.disconnect()
+        self._create_task(self.guild.voice_client.disconnect())
 
     def after(self, error=None):
         # raise NotImplementedError
@@ -221,7 +221,10 @@ class VoiceFeature(commands.Cog):
         if not voice:
             return await ctx.send("Not connected to a voice channel in this guild.")
 
-        await voice.disconnect()
+        queue = self.queues.get(ctx.channel.id)
+        await queue.cleanup()
+
+        # await voice.disconnect()
         await ctx.send(f"Disconnected from {voice.channel.mention}.")
 
     @commands.command(name="skip")
