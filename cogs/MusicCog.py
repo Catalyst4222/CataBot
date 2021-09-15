@@ -75,6 +75,7 @@ class Queue:
         if error is not None:
             raise error
 
+        # looping logic, will not affect next song playing
         if not self.loop:
             finished = self.queue.pop(0)
             self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
@@ -292,6 +293,26 @@ class VoiceFeature(commands.Cog):
         source.volume = volume
 
         await ctx.send(f"Volume set to {volume * 100:.2f}%")
+
+    @commands.command(name='loop', aliases=['l'])
+    async def jsk_vc_loop(self, ctx: commands.Context, state: bool = None):
+        queue = self.queues.get(ctx.channel.id)
+        if queue is None:
+            await ctx.send('There is no music queue bound to this channel')
+
+        queue.loop = not queue.loop if state is None else state
+
+        await ctx.send(f'Song loop set to {queue.loop}')
+
+    @commands.command(name='loopqueue', aliases=['lq'])
+    async def jsk_vc_loop(self, ctx: commands.Context, state: bool = None):
+        queue = self.queues.get(ctx.channel.id)
+        if queue is None:
+            await ctx.send('There is no music queue bound to this channel')
+
+        queue.loopqueue = not queue.loopqueue if state is None else state
+
+        await ctx.send(f'Queue loop set to {queue.loopqueue}')
 
     @commands.command(name="play", aliases=["play_local"])
     async def jsk_vc_play(self, ctx: commands.Context, *, uri: typing.Optional[str]):
