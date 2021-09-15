@@ -116,7 +116,7 @@ class Queue:
         # it just works, no touchy
         if not self.loop:
             finished = self.queue.pop(0)
-            self._send(f'Finished playing {finished.title}')
+            # self._send(f'Finished playing {finished.title}')
             if self.loopqueue:
                 self.queue.append(finished)
 
@@ -274,7 +274,8 @@ class VoiceFeature(commands.Cog):
     @commands.command(name="skip")
     async def jsk_vc_skip(self, ctx: commands.Context, amount=1):
         """
-        Stops running an audio source, if there is one.
+        Skip the current song
+        Add a number after to skip multiple
         """
 
         if not self.playing_check(ctx):
@@ -284,7 +285,7 @@ class VoiceFeature(commands.Cog):
 
         voice.stop()
         self._queues[ctx.guild.id].skip(amount)
-        await ctx.send(f"Stopped playing audio in {voice.channel.mention}.")
+        await ctx.send(f"Skipped the song in {voice.channel.mention}.")
 
     @commands.command(name="pause")
     async def jsk_vc_pause(self, ctx: commands.Context):
