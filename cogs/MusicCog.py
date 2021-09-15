@@ -65,7 +65,10 @@ class Queue:
     #     else:
     #         raise ValueError(f'Unexpected value: {type_ }')
 
-
+    def cleanup(self):
+        self.queue = []
+        self.guild.voice_client.stop()
+        self.guild.voice_client.disconnect()
 
     def after(self, error=None):
         # raise NotImplementedError
@@ -107,6 +110,10 @@ class VoiceFeature(commands.Cog):
     def __init__(self, bot):
         self.bot: commands.Bot = bot
         self.queues: dict[int, Queue] = {}
+
+    def cog_unload(self):
+        for queue in self.queues.values():
+            queue.cleanup()
 
     @staticmethod
     async def voice_check(ctx: commands.Context):
