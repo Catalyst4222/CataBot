@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import pickle
 import time
@@ -112,4 +113,9 @@ finally:
 
     for cog in list(bot.cogs):
         bot.remove_cog(cog.qualified_name)
+
+    print('Finishing loop')
+    tasks = asyncio.all_tasks(bot.loop)
+    print(f'Remaining tasks: {tasks}')
+    bot.loop.run_until_complete(asyncio.gather(*tasks))
     print('Exited')
