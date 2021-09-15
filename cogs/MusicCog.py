@@ -294,7 +294,7 @@ class VoiceFeature(commands.Cog):
         await ctx.send(f"Volume set to {volume * 100:.2f}%")
 
     @commands.command(name="play", aliases=["play_local"])
-    async def jsk_vc_play(self, ctx: commands.Context, *, uri: str):  # TODO make uri optional to unpause
+    async def jsk_vc_play(self, ctx: commands.Context, *, uri: typing.Optional[str]):
         """
         Plays audio direct from a URI.
         Can be either a local file or an audio resource on the internet.
@@ -305,8 +305,9 @@ class VoiceFeature(commands.Cog):
 
         voice = ctx.guild.voice_client
 
-        # if voice.is_playing():
-        #     voice.stop()
+        if not voice.is_paused():
+            voice.resume()
+            return await ctx.send("Audio unpaused.")
 
         # remove embed maskers if present
         uri = uri.lstrip("<").rstrip(">")
