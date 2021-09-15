@@ -1,5 +1,5 @@
 from discord.ext import commands
-import typing
+from typing import Optional, Union
 import discord
 import youtube_dl
 import discord.opus
@@ -34,6 +34,40 @@ def youtube_to_ffmpeg(url, download: bool = False):
     return info['url']
 
 
+class Song:
+    __slots__ = ('data', 'url', 'title', 'author', 'duration',)
+
+    def __init__(self, data: dict,):
+        # # Expected format:
+        # # noinspection PyStatementEffect
+        # {
+        #     'name': Optional[str],
+        #     'url': str,
+        # }
+        # print(data)
+        self.data = data
+        self.url = data['url']
+        self.title = data.get('title') or self.url
+        self.author = data.get('author')
+        self.duration = data.get('duration') or float('inf')
+
+    def __len__(self):
+        return self.duration
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def embed(self) -> discord.Embed:
+        # Do later
+        embed = discord.Embed(title=self.title)
+        embed.set_thumbnail(url=self.data['thumbnail'])
+
+        embed.set_author(name=self.author, url=self.data.get('channel_url', discord.Embed.Empty))
+
+        return embed
+
+
 class Queue:
     __slots__ = ('bot', 'voice_channel', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue')
 
@@ -42,7 +76,7 @@ class Queue:
         self.voice_channel: discord.VoiceClient = ctx.guild.voice_client
         self.bound_channel: discord.TextChannel = ctx.channel
         self.guild: discord.Guild = ctx.guild
-        self.queue = []
+        self.queue: list[Song] = []
         self.loop: bool = False
         self.loopqueue: bool = False
 
@@ -50,7 +84,10 @@ class Queue:
     def _create_task(self):
         return self.bot.loop.create_task
 
-    def add(self, song):
+    def _send(self, *args, **kwargs):
+        return self._create_task(self.bound_channel.send(*args, **kwargs))
+
+    def add(self, song: Song):
         self.queue.append(song)
 
     def skip(self, amount=1):
@@ -76,22 +113,23 @@ class Queue:
             raise error
 
         # looping logic, will not affect next song playing
+        # it just works, no touchy
         if not self.loop:
             finished = self.queue.pop(0)
-            self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
+            self._send(f'Finished playing {finished.title}')
             if self.loopqueue:
                 self.queue.append(finished)
 
         if self.queue:
             source = self.queue[0]
-            self._create_task(self.bound_channel.send(f'Now playing {source}'))
+            self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
 
 
             self.guild.voice_client.play(
                 discord.PCMVolumeTransformer(
                     # self._get_player(*source)
                     discord.FFmpegPCMAudio(
-                        source, **FFMPEG_OPTIONS
+                        source.url, **FFMPEG_OPTIONS
                     )
                 ),
                 after=self.after
@@ -109,12 +147,18 @@ class VoiceFeature(commands.Cog):
     Feature containing the core voice-related commands
     """
     def __init__(self, bot):
-        self.bot: commands.Bot = bot
-        self.queues: dict[int, Queue] = {}
+        self._bot: commands.Bot = bot
+        self._queues: dict[int, Queue] = {}
 
     def cog_unload(self):
-        for queue in self.queues.values():
+        for queue in self._queues.values():
             queue.cleanup()
+
+    def _get_queue(self, ctx) -> Optional[Queue]:
+        guild = ctx.guild
+        for queue in self._queues.values():
+            if queue.guild == guild:
+                return queue
 
     @staticmethod
     async def voice_check(ctx: commands.Context):
@@ -182,7 +226,7 @@ class VoiceFeature(commands.Cog):
 
     @commands.command(name="join", aliases=["connect"])
     async def jsk_vc_join(self, ctx: commands.Context, *,
-                          destination: typing.Union[discord.VoiceChannel, discord.Member] = None):
+                          destination: Union[discord.VoiceChannel, discord.Member] = None):
         """
         Joins a voice channel, or moves to it if already connected.
         Passing a voice channel uses that voice channel.
@@ -207,7 +251,7 @@ class VoiceFeature(commands.Cog):
             await voice.move_to(destination)
         else:
             await destination.connect(reconnect=True)
-        self.queues[ctx.channel.id] = Queue(self.bot, ctx)
+        self._queues[ctx.guild.id] = Queue(self._bot, ctx)
 
         await ctx.send(f"Connected to {destination.mention}.")
 
@@ -221,7 +265,7 @@ class VoiceFeature(commands.Cog):
         if not voice:
             return await ctx.send("Not connected to a voice channel in this guild.")
 
-        queue = self.queues.get(ctx.channel.id)
+        queue = self._queues.get(ctx.guild.id)
         await queue.cleanup()
 
         # await voice.disconnect()
@@ -239,7 +283,7 @@ class VoiceFeature(commands.Cog):
         voice = ctx.guild.voice_client
 
         voice.stop()
-        self.queues[ctx.channel.id].skip(amount)
+        self._queues[ctx.guild.id].skip(amount)
         await ctx.send(f"Stopped playing audio in {voice.channel.mention}.")
 
     @commands.command(name="pause")
@@ -299,7 +343,7 @@ class VoiceFeature(commands.Cog):
 
     @commands.command(name='loop', aliases=['l'])
     async def jsk_vc_loop(self, ctx: commands.Context, state: bool = None):
-        queue = self.queues.get(ctx.channel.id)
+        queue = self._queues.get(ctx.guild.id)
         if queue is None:
             await ctx.send('There is no music queue bound to this channel')
 
@@ -308,8 +352,8 @@ class VoiceFeature(commands.Cog):
         await ctx.send(f'Song loop set to {queue.loop}')
 
     @commands.command(name='loopqueue', aliases=['lq'])
-    async def jsk_vc_loop(self, ctx: commands.Context, state: bool = None):
-        queue = self.queues.get(ctx.channel.id)
+    async def jsk_vc_loopqueue(self, ctx: commands.Context, state: bool = None):
+        queue = self._queues.get(ctx.guild.id)
         if queue is None:
             await ctx.send('There is no music queue bound to this channel')
 
@@ -318,7 +362,7 @@ class VoiceFeature(commands.Cog):
         await ctx.send(f'Queue loop set to {queue.loopqueue}')
 
     @commands.command(name="play", aliases=["play_local"])
-    async def jsk_vc_play(self, ctx: commands.Context, *, uri: typing.Optional[str]):
+    async def jsk_vc_play(self, ctx: commands.Context, *, uri: Optional[str]):
         """
         Plays audio direct from a URI.
         Can be either a local file or an audio resource on the internet.
@@ -336,8 +380,9 @@ class VoiceFeature(commands.Cog):
         # remove embed maskers if present
         uri = uri.lstrip("<").rstrip(">")
 
-        queue = self.queues[ctx.channel.id]
-        queue.add(uri)
+        queue = self._queues[ctx.guild.id]
+        song = Song({'url': uri, 'title': uri})
+        queue.add(song)
 
         if not voice.is_playing():
             voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(uri, **FFMPEG_OPTIONS)), after=queue.after)
@@ -366,13 +411,16 @@ class VoiceFeature(commands.Cog):
         # remove embed maskers if present
         url = url.lstrip("<").rstrip(">")
 
-        uri = youtube_to_ffmpeg(url)
 
-        queue = self.queues[ctx.channel.id]
-        queue.add(uri)
+        # uri = youtube_to_ffmpeg(url)
+        ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)
+        info = ytdl.extract_info(url, download=False)
+
+        queue = self._queues[ctx.guild.id]
+        queue.add(Song(info))
 
         if not voice.is_playing():
-            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(uri, **FFMPEG_OPTIONS)), after=queue.after)
+            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(info['url'], **FFMPEG_OPTIONS)), after=queue.after)
             await ctx.send(f"Playing in {voice.channel.mention}.")
         else:
             await ctx.send('File added to queue')
