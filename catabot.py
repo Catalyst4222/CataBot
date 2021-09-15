@@ -109,4 +109,7 @@ try:
     bot.run(bot.TOKEN)
 finally:
     pickle.dump(bot.settings, open('settings.pickle', 'wb+'))
+
+    for cog in list(bot.cogs):
+        bot.remove_cog(cog.qualified_name)
     print('Exited')
