@@ -147,7 +147,7 @@ class Utility(commands.Cog):
 
     @cog_slash(name='stats')
     async def _stats(self, ctx: SlashContext):
-        return self.stats(ctx)
+        return await self.stats(ctx)
 
 
 def setup(bot):

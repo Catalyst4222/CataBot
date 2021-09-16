@@ -22,7 +22,6 @@ if name == 'posix':  # Make laptop speeeed!
 # TODO
 # remove bad commands
 # Better subcommands
-# continue on menus (steal dyno's profile thing)
 # Guild autorole
 # prevent fail in youtubedl
 # docstring action commands
