@@ -28,6 +28,7 @@ if name == 'posix':  # Make laptop speeeed!
 # docstring action commands
 # special thing for rps
 # MIT licence
+# thing with replies and say
 
 
 logger = logging.getLogger('discord')

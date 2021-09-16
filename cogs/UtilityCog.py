@@ -41,7 +41,7 @@ class Utility(commands.Cog):
     async def invite(
         self,
         ctx,
-        perms: typing.Optional[int] = 2483416129,
+        perms: typing.Optional[int] = 2486561857,
         slashCommands: typing.Optional[bool] = True,
     ):
         """Create an invite for the bot.
