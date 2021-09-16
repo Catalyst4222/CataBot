@@ -69,10 +69,11 @@ class Song:
 
 
 class Queue:
-    __slots__ = ('bot', 'voice_channel', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue')
+    __slots__ = ('bot', 'voice_channel', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx')
 
     def __init__(self, bot, ctx: commands.Context):
         self.bot: commands.Bot = bot
+        self.ctx = ctx
         self.voice_channel: discord.VoiceClient = ctx.guild.voice_client
         self.bound_channel: discord.TextChannel = ctx.channel
         self.guild: discord.Guild = ctx.guild
@@ -110,6 +111,8 @@ class Queue:
     def after(self, error=None):
         # raise NotImplementedError
         if error is not None:
+            cog = self.bot.get_cog('Events')
+            self._create_task(cog.error_checker(self.ctx, error))
             raise error
 
         # looping logic, will not affect next song playing
