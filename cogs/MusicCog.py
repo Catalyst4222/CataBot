@@ -105,7 +105,7 @@ class Queue:
 
     async def cleanup(self):
         self.queue = []
-        self.guild.voice_client.stop()
+        # self.guild.voice_client.stop()
         self._create_task(self.guild.voice_client.disconnect())
 
     def after(self, error=None):
@@ -113,12 +113,14 @@ class Queue:
         if error is not None:
             cog = self.bot.get_cog('Events')
             self._create_task(cog.error_checker(self.ctx, error))
-            raise error
 
         # looping logic, will not affect next song playing
         # it just works, no touchy
         if not self.loop:
-            finished = self.queue.pop(0)
+            try:
+                finished = self.queue.pop(0)
+            except IndexError:
+                return
             # self._send(f'Finished playing {finished.title}')
             if self.loopqueue:
                 self.queue.append(finished)
@@ -377,9 +379,9 @@ class VoiceFeature(commands.Cog):
 
         voice = ctx.guild.voice_client
 
-        if not voice.is_paused():
-            voice.resume()
-            return await ctx.send("Audio unpaused.")
+        # if not voice.is_paused():
+        #     voice.resume()
+        #     await ctx.send("Audio unpaused.")
 
         # remove embed maskers if present
         uri = uri.lstrip("<").rstrip(">")
