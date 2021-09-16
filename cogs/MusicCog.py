@@ -276,7 +276,7 @@ class VoiceFeature(commands.Cog):
         # await voice.disconnect()
         await ctx.send(f"Disconnected from {voice.channel.mention}.")
 
-    @commands.command(name="skip")
+    @commands.command(name="skip", aliases=['s'])
     async def jsk_vc_skip(self, ctx: commands.Context, amount=1):
         """
         Skip the current song
