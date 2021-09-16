@@ -10,7 +10,9 @@ from discord.ext import commands
 BASIC_OPTS = {
     'format': 'webm[abr>0]/bestaudio/best',
     'prefer_ffmpeg': True,
-    'quiet': True
+    'quiet': True,
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/75.0.3770.80 Safari/537.36 "
 }
 
 FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
