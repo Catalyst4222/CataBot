@@ -30,6 +30,7 @@ if name == 'posix':  # Make laptop speeeed!
 # thing with replies and say
 # rename pngify to emoji
 # --rm-cache-dir
+# system command
 
 
 logger = logging.getLogger()
@@ -117,8 +118,10 @@ finally:
     for cog in list(bot.cogs):
         bot.remove_cog(cog.qualified_name)
 
-    print('Finishing loop')
+    # print('Finishing loop')
     tasks = asyncio.all_tasks(bot.loop)
-    print(f'Remaining tasks: {tasks}')
-    bot.loop.run_until_complete(asyncio.gather(*tasks))
+    if tasks:
+        print('Tasks were remaining!')
+    # print(f'Remaining tasks: {tasks}')
+    # bot.loop.run_until_complete(asyncio.gather(*tasks))
     print('Exited')
