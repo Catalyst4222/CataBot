@@ -149,6 +149,19 @@ class Utility(commands.Cog):
     async def _stats(self, ctx: SlashContext):
         return await self.stats(ctx)
 
+    # noinspection SpellCheckingInspection
+    @commands.command(name='badlist')
+    async def badlist(self, ctx):
+        """People who broke CataBot at least once, and what they did"""
+        people: list[tuple] = [
+            ('Catalyst', 'General dev things and exiting from a repl'),
+            ('Crystaline', 'Played a bad song and <something> youtube-dl')
+        ]
+
+        embed = discord.Embed(title='Bad people', description="Please don't break CataBot, CataBot loves you")
+        [embed.add_field(name=person, value=reason) for person, reason in people]
+        await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Utility(bot))
