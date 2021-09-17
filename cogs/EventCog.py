@@ -109,6 +109,19 @@ class Events(commands.Cog):
             else:
                 print('Ignoring exception', file=sys.stderr)
 
+            try:
+                print(f'Channel: {ctx.channel.id}')
+                print(f'Author: {ctx.author.id}')
+                ctx.bot.logger.error(''.join(
+                    [f'Channel: {ctx.channel.id}'
+                     f'Author: {ctx.author.id}'] +
+                    traceback.format_exception(
+                        type(error), error, error.__traceback__
+                    )
+                ))
+            except:
+                pass
+
             traceback.print_exception(
                 type(error), error, error.__traceback__, file=sys.stderr
             )

@@ -28,6 +28,8 @@ if name == 'posix':  # Make laptop speeeed!
 # special thing for rps
 # MIT licence
 # thing with replies and say
+# rename pngify to emoji
+# --rm-cache-dir
 
 
 logger = logging.getLogger('discord')
@@ -53,6 +55,7 @@ bot = commands.Bot(
     help_command=PrettyHelp(menu=menu, show_index=False),
     intents=discord.Intents.all()
 )
+bot.logger = logger
 slash = SlashCommand(
     bot,
     sync_commands=True,
