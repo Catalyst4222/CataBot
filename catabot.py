@@ -32,7 +32,7 @@ if name == 'posix':  # Make laptop speeeed!
 # --rm-cache-dir
 
 
-logger = logging.getLogger('discord')
+logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter('[%(levelname)s] [%(asctime)s] [%(name)s]: %(message)s', '%H:%M:%S')
 
