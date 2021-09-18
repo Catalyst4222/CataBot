@@ -50,9 +50,9 @@ class Song:
         # print(data)
         self.data = data
         self.url = data['url']
-        self.title = data.get('title') or self.url
+        self.title = data.get('title', self.url)
         self.author = data.get('author')
-        self.duration = data.get('duration') or float('inf')
+        self.duration = data.get('duration', float('inf'))
 
     def __len__(self):
         return self.duration
@@ -63,12 +63,15 @@ class Song:
     @property
     def embed(self) -> discord.Embed:
         # Do later
-        embed = discord.Embed(title=self.title)
+        embed = discord.Embed(title=self.title, url=self.url)
         embed.set_thumbnail(url=self.data['thumbnail'])
-
         embed.set_author(name=self.author, url=self.data.get('channel_url', discord.Embed.Empty))
 
         return embed
+
+    # muscle memory
+    def to_embed(self) -> discord.Embed:
+        return self.embed
 
 
 class Queue:
