@@ -72,12 +72,11 @@ class Song:
 
 
 class Queue:
-    __slots__ = ('bot', 'voice_channel', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx')
+    __slots__ = ('bot', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx')
 
     def __init__(self, bot, ctx: commands.Context):
         self.bot: commands.Bot = bot
         self.ctx = ctx
-        self.voice_channel: discord.VoiceClient = ctx.guild.voice_client
         self.bound_channel: discord.TextChannel = ctx.channel
         self.guild: discord.Guild = ctx.guild
         self.queue: list[Song] = []
@@ -96,7 +95,7 @@ class Queue:
 
     def skip(self, amount=1):
         [self.queue.pop(0) for _ in range(amount-1)]
-        self.voice_channel.stop()
+        self.guild.voice_client.stop()
 
     # def _get_player(self, source: str, type_: str):
     #     if type_ == 'uri':
