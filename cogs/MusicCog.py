@@ -1,3 +1,4 @@
+import asyncio
 from discord.ext import commands
 from typing import Optional, Union
 import discord
@@ -6,6 +7,7 @@ import discord.opus
 import discord.voice_client
 from discord.ext import commands
 
+from .utils import chunk
 
 BASIC_OPTS = {
     'format': 'webm[abr>0]/bestaudio/best',
