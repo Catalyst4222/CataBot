@@ -1,5 +1,8 @@
 import asyncio
+import time
 from functools import wraps, partial
+from itertools import chain, islice
+
 import discord
 import discord_slash
 from discord.ext import commands
@@ -149,7 +152,7 @@ def all_have_permissions(**perms):
     return commands.check(predicate)
 
 
-def now(*args, **kwargs):
+def run_now(*args, **kwargs):
     def inner(coro):
         asyncio.create_task(coro(*args, **kwargs))
         return promise(coro)
@@ -196,5 +199,20 @@ def merge(a, b, path=None):
             a[key] = b[key]
     return a
 
+
+# https://stackoverflow.com/questions/24527006/split-a-generator-into-chunks-without-pre-walking-it
+def chunk(iterable, size=10):
+    iterator = iter(iterable)
+    for first in iterator:
+        yield chain([first], islice(iterator, size - 1))
+
+
+def sec_to_time(then: int) -> str:
+    now = time.time() - then
+    minutes, seconds = divmod(int(now), 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+
+    return f'{days} days, {hours} hours, {minutes} minutes, {seconds} seconds'
 
 def setup(*_, ): pass

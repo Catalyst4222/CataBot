@@ -7,7 +7,8 @@ from discord_slash.model import ContextMenuType
 from discord_slash.cog_ext import cog_context_menu, cog_slash
 from discord_slash.context import MenuContext, SlashContext
 
-from .utils import run_cmd
+from .utils import run_cmd, sec_to_time
+
 
 class Utility(commands.Cog):
     """Helpful commands for handling the bot"""
@@ -119,15 +120,6 @@ class Utility(commands.Cog):
                        f'Static: <t:{number}:F>\n'
                        f'Relative: <t:{number}:R>')
 
-    @staticmethod
-    def sec_to_time(then: int) -> str:
-        now = time.time() - then
-        minutes, seconds = divmod(int(now), 60)
-        hours, minutes = divmod(minutes, 60)
-        days, hours = divmod(hours, 24)
-
-        return f'{days} days, {hours} hours, {minutes} minutes, {seconds} seconds'
-
 
     @commands.command()
     async def stats(self, ctx: commands.Context):
@@ -136,7 +128,7 @@ class Utility(commands.Cog):
                         icon_url=str(self.bot.user.avatar_url)) \
             .set_footer(text=datetime.datetime.now().time()) \
             .add_field(name='Latency', value=f'{self.bot.latency:.2f} seconds') \
-            .add_field(name='Time since start', value=self.sec_to_time(self.bot.start_time))
+            .add_field(name='Time since start', value=sec_to_time(self.bot.start_time))
 
         uwu = (await run_cmd('echo "Hello World" | uwuify /dev/stdin'))[0] == b'hewwo wowwd'
         embed.add_field(name='uwuifier', value=('On' if uwu else 'Off') + 'line')
