@@ -113,8 +113,8 @@ class Events(commands.Cog):
                 print(f'Channel: {ctx.channel.id}')
                 print(f'Author: {ctx.author.id}')
                 ctx.bot.logger.error(''.join(
-                    [f'Channel: {ctx.channel.id}'
-                     f'Author: {ctx.author.id}'] +
+                    [f'\nChannel: {ctx.channel.id}\n'
+                     f'Author: {ctx.author.id}\n'] +
                     traceback.format_exception(
                         type(error), error, error.__traceback__
                     )
