@@ -117,11 +117,14 @@ class Queue:
             return
 
         if vc is not None and not vc.is_playing():
+            source = self.queue[0]
+            self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
+
             self.guild.voice_client.play(
                 discord.PCMVolumeTransformer(
                     # self._get_player(*source)
                     discord.FFmpegPCMAudio(
-                        self.queue[0].url, **FFMPEG_OPTIONS
+                        source.url, **FFMPEG_OPTIONS
                     )
                 ),
                 after=self.after
@@ -145,9 +148,6 @@ class Queue:
                 self.queue.append(finished)
 
         if self.queue:
-            source = self.queue[0]
-            self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
-
             self.prime_song()
         # else:
         #     self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
