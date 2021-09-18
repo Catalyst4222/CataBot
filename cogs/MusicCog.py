@@ -111,6 +111,22 @@ class Queue:
         # self.guild.voice_client.stop()
         self._create_task(self.guild.voice_client.disconnect())
 
+    def prime_song(self):
+        vc = self.guild.voice_client
+        if not self.queue:
+            return
+
+        if vc is not None and not vc.is_playing():
+            self.guild.voice_client.play(
+                discord.PCMVolumeTransformer(
+                    # self._get_player(*source)
+                    discord.FFmpegPCMAudio(
+                        self.queue[0].url, **FFMPEG_OPTIONS
+                    )
+                ),
+                after=self.after
+            )
+
     def after(self, error=None):
         # raise NotImplementedError
         if error is not None:
@@ -132,16 +148,7 @@ class Queue:
             source = self.queue[0]
             self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
 
-
-            self.guild.voice_client.play(
-                discord.PCMVolumeTransformer(
-                    # self._get_player(*source)
-                    discord.FFmpegPCMAudio(
-                        source.url, **FFMPEG_OPTIONS
-                    )
-                ),
-                after=self.after
-            )
+            self.prime_song()
         # else:
         #     self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
 
@@ -396,7 +403,7 @@ class VoiceFeature(commands.Cog):
         queue.add(song)
 
         if not voice.is_playing():
-            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(uri, **FFMPEG_OPTIONS)), after=queue.after)
+            queue.prime_song()
             await ctx.send(f"Playing in {voice.channel.mention}.")
         else:
             await ctx.send('File added to queue')
