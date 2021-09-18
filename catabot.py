@@ -20,8 +20,6 @@ if name == 'posix':  # Make laptop speeeed!
 # from cogs import utils
 
 # TODO
-# remove bad commands
-# Better subcommands
 # Guild autorole
 # prevent fail in youtubedl
 # docstring action commands
@@ -32,6 +30,10 @@ if name == 'posix':  # Make laptop speeeed!
 # --rm-cache-dir
 # ytsearch:not a link
 # system command
+# custom prefixes
+# shuffle songs
+# now playing
+# common songs
 
 
 logger = logging.getLogger()
