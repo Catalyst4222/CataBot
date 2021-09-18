@@ -136,10 +136,9 @@ class Utility(commands.Cog):
                         icon_url=str(self.bot.user.avatar_url)) \
             .set_footer(text=datetime.datetime.now().time()) \
             .add_field(name='Latency', value=f'{self.bot.latency:.2f} seconds') \
-            .add_field(name='Time since start', value=self.sec_to_time(self.bot.start_time)) \
-            .add_field(name='Time since reconnect', value=self.sec_to_time(self.bot.start_time))
+            .add_field(name='Time since start', value=self.sec_to_time(self.bot.start_time))
 
-        uwu = (await run_cmd('echo "Hello World" | uwuify /dev/stdin'))[1] == b'hewwo wowwd'
+        uwu = (await run_cmd('echo "Hello World" | uwuify /dev/stdin'))[0] == b'hewwo wowwd'
         embed.add_field(name='uwuifier', value=('On' if uwu else 'Off') + 'line')
 
         await ctx.send(embed=embed)
@@ -155,7 +154,7 @@ class Utility(commands.Cog):
         """People who broke CataBot at least once, and what they did"""
         people: list[tuple] = [
             ('Catalyst', 'General dev things and exiting from a repl'),
-            ('Crystaline', 'Played a bad song and <something> youtube-dl')
+            ('Crystaline', 'Played a bad song and <something> youtube-dl, crashing the bot')
         ]
 
         embed = discord.Embed(title='Bad people', description="Please don't break CataBot, CataBot loves you")

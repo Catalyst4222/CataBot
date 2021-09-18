@@ -30,6 +30,7 @@ if name == 'posix':  # Make laptop speeeed!
 # thing with replies and say
 # rename pngify to emoji
 # --rm-cache-dir
+# ytsearch:not a link
 # system command
 
 
@@ -95,7 +96,6 @@ async def restart(ctx):
 
 @bot.event
 async def on_ready():
-    bot.ready_time = time.time()
     print('Ready!')
 
 
