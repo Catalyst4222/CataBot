@@ -281,7 +281,7 @@ class VoiceFeature(commands.Cog):
             return await ctx.send("Not connected to a voice channel in this guild.")
 
         queue = self._queues.get(ctx.guild.id)
-        await queue.cleanup()
+        queue.cleanup()
 
         # await voice.disconnect()
         await ctx.send(f"Disconnected from {voice.channel.mention}.")
@@ -444,6 +444,35 @@ class VoiceFeature(commands.Cog):
             await ctx.send(f"Playing in {voice.channel.mention}.")
         else:
             await ctx.send('File added to queue')
+
+
+    @commands.command(name='playlist')
+    async def playlist(self, ctx: commands.Context, *, url: str):
+        """
+        Play a song from a youtube playlist
+        Currently, most other playlists from sites are untested
+        """
+        if not self.connected_check(ctx):
+            await self.jsk_vc_join(ctx)
+
+        # remove embed maskers if present
+        url = url.lstrip("<").rstrip(">")
+
+        # uri = youtube_to_ffmpeg(url)
+        ytdl = youtube_dl.YoutubeDL({"extract_flat": 'in_playlist', "forcejson": True, **BASIC_OPTS})
+        info = ytdl.extract_info(url, download=False)
+
+        song_links = ("https://youtube.com/v/" + str(dict_['id']) for dict_ in info['entries'])
+
+        song_info = (ytdl.extract_info(link, download=False) for link in song_links)
+
+        songs = (Song(song) for song in song_info)
+
+        queue = self._get_queue(ctx)
+
+        [queue.add(song) for song in songs]
+        await ctx.send('Songs added')
+        queue.prime_song()
 
 
 def setup(bot):
