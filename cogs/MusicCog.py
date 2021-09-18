@@ -424,6 +424,8 @@ class VoiceFeature(commands.Cog):
         # uri = youtube_to_ffmpeg(url)
         ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)
         info = ytdl.extract_info(url, download=False)
+        if 'url' not in info:
+            return await ctx.send('Invalid link')
 
         queue = self._queues[ctx.guild.id]
         queue.add(Song(info))
