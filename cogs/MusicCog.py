@@ -377,6 +377,8 @@ class VoiceFeature(commands.Cog):
         Can be either a local file or an audio resource on the internet.
         """
 
+        await ctx.send('This feature is currently unsupported')
+
         if not self.connected_check(ctx):
             await self.jsk_vc_join(ctx)
 
