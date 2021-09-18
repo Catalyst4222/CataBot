@@ -169,11 +169,12 @@ class VoiceFeature(commands.Cog):
         for queue in self._queues.values():
             queue.cleanup()
 
-    def _get_queue(self, ctx) -> Optional[Queue]:
+    def _get_queue(self, ctx) -> Queue:
         guild = ctx.guild
         for queue in self._queues.values():
             if queue.guild == guild:
                 return queue
+        return Queue(self._bot, ctx)
 
     @staticmethod
     async def voice_check(ctx: commands.Context):
@@ -299,7 +300,7 @@ class VoiceFeature(commands.Cog):
         voice = ctx.guild.voice_client
 
         voice.stop()
-        self._queues[ctx.guild.id].skip(amount)
+        self._get_queue(ctx).skip(amount)
         await ctx.send(f"Skipped the song in {voice.channel.mention}.")
 
     @commands.command(name="pause")
@@ -359,7 +360,7 @@ class VoiceFeature(commands.Cog):
 
     @commands.command(name='loop', aliases=['l'])
     async def jsk_vc_loop(self, ctx: commands.Context, state: bool = None):
-        queue = self._queues.get(ctx.guild.id)
+        queue = self._get_queue(ctx)
         if queue is None:
             await ctx.send('There is no music queue bound to this channel')
 
@@ -369,7 +370,7 @@ class VoiceFeature(commands.Cog):
 
     @commands.command(name='loopqueue', aliases=['lq'])
     async def jsk_vc_loopqueue(self, ctx: commands.Context, state: bool = None):
-        queue = self._queues.get(ctx.guild.id)
+        queue = self._get_queue(ctx)
         if queue is None:
             await ctx.send('There is no music queue bound to this channel')
 
@@ -398,7 +399,7 @@ class VoiceFeature(commands.Cog):
         # remove embed maskers if present
         uri = uri.lstrip("<").rstrip(">")
 
-        queue = self._queues[ctx.guild.id]
+        queue = self._get_queue(ctx)
         song = Song({'url': uri, 'title': uri})
         queue.add(song)
 
@@ -436,7 +437,7 @@ class VoiceFeature(commands.Cog):
         if 'url' not in info:
             return await ctx.send('Invalid link')
 
-        queue = self._queues[ctx.guild.id]
+        queue = self._get_queue(ctx)
         queue.add(Song(info))
 
         if not voice.is_playing():
