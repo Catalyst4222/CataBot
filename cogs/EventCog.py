@@ -71,10 +71,13 @@ class Events(commands.Cog):
             await ctx.send('Only the owner can run this command')
 
         elif isinstance(error, commands.BotMissingPermissions):
-            await ctx.send(
-                "The bot is missing the following permissions:\n"
-                + '\n'.join(error.missing_perms)
-            )
+            try:
+                await ctx.send(
+                    "The bot is missing the following permissions:\n"
+                    + '\n'.join(error.missing_perms)
+                )
+            except discord.Forbidden:
+                ctx.bot.logger.warning(f'Missing send permissions in {ctx.channel}')
 
         elif isinstance(error, commands.MissingPermissions):
             await ctx.send(
