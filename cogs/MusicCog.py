@@ -151,6 +151,9 @@ class Queue:
         # else:
         #     self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
 
+    def __len__(self):
+        return len(self.queue)
+
 
 
 
