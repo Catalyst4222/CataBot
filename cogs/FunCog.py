@@ -82,9 +82,9 @@ class FunThings(commands.Cog):
             remove('out.mp4')
 
     @commands.command(
-        name='pngify', help='Convert any emoji to a png (if animated, add "True")'
+        name='emoji', help='Convert any emoji to a png (if animated, add "True")'
     )
-    async def pngify(self, ctx, emoji, ani: typing.Optional[str]):
+    async def emoji(self, ctx, emoji, ani: typing.Optional[str]):
         try:
             partial = await commands.PartialEmojiConverter().convert(ctx, emoji)
             await ctx.send(partial.url)
