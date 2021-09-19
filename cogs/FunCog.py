@@ -1,4 +1,5 @@
 import asyncio
+import random
 from os import remove
 from discord.ext import commands
 from youtube_dl import YoutubeDL
@@ -145,6 +146,16 @@ class FunThings(commands.Cog):
         postuwu = await commands.clean_content(escape_markdown=True).convert(ctx, postuwu)
         postuwu = postuwu.replace('\\\\\\', '').replace('\\\\', '\\')
         await ctx.send('>>> ' + postuwu)
+
+    @commands.command(name='image')
+    async def image(self, ctx):
+        return await ctx.send(random.choice([
+            'https://cdn.discordapp.com/attachments/777076253790306324/889287385395888138/uei41m0xoho71.webp',
+            'https://cdn.discordapp.com/attachments/772935200706789376/889152267117281310/image0.png',
+            'https://cdn.discordapp.com/attachments/777076253790306324/889290523997765642/image0.jpg',
+        ]))
+
+
 
 
 def setup(bot):
