@@ -4,11 +4,14 @@ import io, textwrap, traceback, asyncio, inspect
 from typing import Union, Optional
 from contextlib import redirect_stdout
 from copy import copy
-from discord_slash.model import CommandObject
-from discord_slash.utils.manage_commands import add_slash_command
 
 from . import utils
-from .utils.jsk_repl import codeblock_converter, AsyncCodeExecutor, AsyncSender, Scope, jsk_python_result_handling
+from .utils.jsk.repl import AsyncCodeExecutor, AsyncSender, Scope, jsk_python_result_handling
+
+
+from .utils.jsk.codeblocks import Codeblock, codeblock_converter
+from .utils.jsk.paginators import PaginatorInterface, WrappedPaginator
+from .utils.jsk.shell import ShellReader
 
 
 class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):

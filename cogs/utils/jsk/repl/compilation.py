@@ -23,7 +23,7 @@ import import_expression
 from .jsk_functools import AsyncSender
 from .scope import Scope
 from .walkers import KeywordTransformer
-from .paginators import PaginatorInterface, WrappedPaginator
+from cogs.utils.jsk.paginators import PaginatorInterface, WrappedPaginator
 
 import discord
 from discord.ext import commands
