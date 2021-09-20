@@ -377,5 +377,50 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
 
 
 
+
+    @commands.command(name="shell", aliases=["bash", "sh", "powershell", "ps1", "ps", "cmd"])
+    async def jsk_shell(self, ctx: commands.Context, *, argument: codeblock_converter):
+        """
+        Executes statements in the system shell.
+        This uses the system shell as defined in $SHELL, or `/bin/bash` otherwise.
+        Execution can be cancelled by closing the paginator.
+        """
+
+        with ShellReader(argument.content) as reader:
+            prefix = "```" + reader.highlight
+
+            paginator = WrappedPaginator(prefix=prefix, max_size=1975)
+            paginator.add_line(f"{reader.ps1} {argument.content}\n")
+
+            interface = PaginatorInterface(ctx.bot, paginator, owner=ctx.author)
+            self.bot.loop.create_task(interface.send_to(ctx))
+
+            async for line in reader:
+                if interface.closed:
+                    return
+                await interface.add_line(line)
+
+        await interface.add_line(f"\n[status] Return code {reader.close_code}")
+
+    @commands.command(name="git")
+    async def jsk_git(self, ctx: commands.Context, *, argument: codeblock_converter):
+        """
+        Shortcut for 'jsk sh git'. Invokes the system shell.
+        """
+
+        return await ctx.invoke(self.jsk_shell,
+                                argument=Codeblock(argument.language, "git " + argument.content))
+
+    @commands.command(name="pip")
+    async def jsk_pip(self, ctx: commands.Context, *, argument: codeblock_converter):
+        """
+        Shortcut for 'jsk sh pip'. Invokes the system shell.
+        """
+
+        return await ctx.invoke(self.jsk_shell,
+                                argument=Codeblock(argument.language, "pip " + argument.content))
+
+
+
 def setup(bot):
     bot.add_cog(OwnerThings(bot))
