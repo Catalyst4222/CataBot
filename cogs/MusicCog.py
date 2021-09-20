@@ -505,6 +505,7 @@ class VoiceFeature(commands.Cog):
 
         await ctx.send('First song primed, chunking the remainder')
 
+        # TODO: show progress
         for group in chunk(song_info, size=25):
 
             def blocking():
@@ -520,6 +521,17 @@ class VoiceFeature(commands.Cog):
         # [queue.add(song) for song in songs]
         await ctx.send('Playlist added')
         queue.prime_song()
+
+    @commands.command(name='_queues')
+    @commands.is_owner()
+    async def show_queues(self, ctx):
+        await ctx.send(
+            '\n\n'.join(
+                f"Server: {queue.guild}\nSongs: {len(queue)}"
+                for queue in self._queues.values()
+            )
+        )
+
 
 
 def setup(bot):
