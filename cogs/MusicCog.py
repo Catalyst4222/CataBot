@@ -89,7 +89,7 @@ class Song:
 
 
 class Queue:
-    __slots__ = ('bot', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx')
+    __slots__ = ('bot', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx', 'volume')
 
     def __init__(self, bot, ctx: commands.Context):
         self.bot: commands.Bot = bot
@@ -99,6 +99,7 @@ class Queue:
         self.queue: list[Song] = []
         self.loop: bool = False
         self.loopqueue: bool = False
+        self.volume: int = 100
 
     @property
     def _create_task(self):
@@ -136,15 +137,15 @@ class Queue:
             source = self.queue[0]
             self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
 
-            self.guild.voice_client.play(
-                discord.PCMVolumeTransformer(
-                    # self._get_player(*source)
-                    discord.FFmpegPCMAudio(
-                        source.url, **FFMPEG_OPTIONS
-                    )
-                ),
-                after=self.after
+            player = discord.PCMVolumeTransformer(
+                discord.FFmpegPCMAudio(
+                    source.url, **FFMPEG_OPTIONS
+                )
             )
+
+            player.volume = self.volume
+
+            self.guild.voice_client.play(player, after=self.after)
 
     def after(self, error=None):
         # raise NotImplementedError
@@ -373,7 +374,7 @@ class VoiceFeature(commands.Cog):
             return await ctx.send("This source doesn't support adjusting volume or "
                                   "the interface to do so is not exposed.")
 
-        source.volume = volume
+        source.volume = self._get_queue(ctx).volume = volume
 
         await ctx.send(f"Volume set to {volume * 100:.2f}%")
 
