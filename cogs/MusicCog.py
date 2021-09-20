@@ -40,7 +40,7 @@ def youtube_to_ffmpeg(url, download: bool = False):
 
 
 class Song:
-    __slots__ = ('data', 'url', 'title', 'author', 'duration',)
+    __slots__ = ('data', 'url', 'title', 'author', 'duration', 'channel', 'playlist')
 
     def __init__(self, data: dict,):
         # # Expected format:
@@ -49,11 +49,19 @@ class Song:
         #     'name': Optional[str],
         #     'url': str,
         # }
-        # print(data)
+        # print(data.keys())
+        # print(data['artist'])
+        # print(data['creator'])
+        # print(data['album'])
+        # print(data['playlist'])
         self.data = data
         self.url = data['url']
         self.title = data.get('title', self.url)
-        self.author = data.get('author')
+
+        self.author = data.get('creator')
+        self.channel = data.get('channel_url')
+        self.playlist = data.get('playlist')
+
         self.duration = data.get('duration', float('inf'))
 
     def __len__(self):
@@ -65,9 +73,13 @@ class Song:
     @property
     def embed(self) -> discord.Embed:
         # Do later
-        embed = discord.Embed(title=self.title, url=self.url)
-        embed.set_thumbnail(url=self.data['thumbnail'])
-        embed.set_author(name=self.author, url=self.data.get('channel_url', discord.Embed.Empty))
+        embed = discord.Embed(title=self.title, url=self.url) \
+            .set_thumbnail(url=self.data['thumbnail']) \
+            .set_author(name=self.author, url=self.channel) \
+            .add_field(name='Playlist', value=self.playlist) \
+            .add_field(name='Duration', value=self.duration)
+
+
 
         return embed
 
@@ -454,7 +466,16 @@ class VoiceFeature(commands.Cog):
             await ctx.send('File added to queue')
 
 
-    @commands.command(name='playlist')
+    @commands.command(name='now_playing', aliases=['np'])
+    async def now_playing(self, ctx: commands.Context):
+        """
+        Show details of the currently playing song
+        """
+        queue = self._get_queue(ctx)
+        await ctx.send(embed=queue.queue[0].embed)
+
+
+    @commands.command(name='playlist', aliases=['pl'])
     async def playlist(self, ctx: commands.Context, *, url: str):
         """
         Play a song from a youtube playlist
@@ -467,19 +488,36 @@ class VoiceFeature(commands.Cog):
         url = url.lstrip("<").rstrip(">")
 
         # uri = youtube_to_ffmpeg(url)
-        ytdl = youtube_dl.YoutubeDL({"extract_flat": 'in_playlist', "forcejson": True, **BASIC_OPTS})
+        ytdl = youtube_dl.YoutubeDL({"extract_flat": 'in_playlist', **BASIC_OPTS})
         info = ytdl.extract_info(url, download=False)
 
         song_links = ("https://youtube.com/v/" + str(dict_['id']) for dict_ in info['entries'])
+        song_info = (ytdl.extract_info(link, download=False) for link in song_links)  # Something here?
 
-        song_info = (ytdl.extract_info(link, download=False) for link in song_links)
 
-        songs = (Song(song) for song in song_info)
 
         queue = self._get_queue(ctx)
 
-        [queue.add(song) for song in songs]
-        await ctx.send('Songs added')
+        first_song = next(song_info)
+        queue.add(Song(first_song))
+        queue.prime_song()
+
+        await ctx.send('First song primed, chunking the remainder')
+
+        for group in chunk(song_info, size=25):
+
+            def blocking():
+                for song in group:
+                    queue.add(Song(song))
+
+            await asyncio.to_thread(blocking)
+
+            print('Chunk loaded')
+            queue.prime_song()
+
+
+        # [queue.add(song) for song in songs]
+        await ctx.send('Playlist added')
         queue.prime_song()
 
 
