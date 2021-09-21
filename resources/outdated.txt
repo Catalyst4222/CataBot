@@ -157,3 +157,45 @@ async def on_raw_reaction_add(payload):
         await message.delete()
     else:
         pass
+
+class AioShell:
+    def __init__(self):
+        self._process = await asyncio.create_subprocess_shell('')
+        self.all_stdout: list[bytearray] = []
+        self.all_stderr: list[bytearray] = []
+        self.stdout = bytearray()
+        self.stderr = bytearray()
+        self.last_message: Optional[discord.Message] = None
+
+    def _extend(self, data: tuple[bytes, bytes]):
+        self.stdout.extend(data[0])
+        self.stderr.extend(data[1])
+
+    async def send(self, input_):
+        data = await self._process.communicate(input_)
+        self._extend(data)
+        return data
+
+    async def update_message(self) -> NoReturn:
+        while True:
+            try:
+                await asyncio.sleep(1)
+                data = await self._process.communicate()
+                if data:
+                    self._extend(data)
+            finally:
+                await self._edit_message()
+
+    async def _edit_message(self):
+        ...
+
+    async def new_message(self, msg: discord.Message):
+        self.last_message = msg
+        self.all_stdout.append(self.stdout)
+        self.all_stderr.append(self.stderr)
+        self.stdout = bytearray()
+        self.stderr = bytearray()
+
+
+    # async def update_message(self):
+    #     ...
