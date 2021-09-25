@@ -112,8 +112,10 @@ class Queue:
         self.queue.append(song)
 
     def skip(self, amount=1):
-        [self.queue.pop(0) for _ in range(amount-1)]
+        old_songs = [self.queue.pop(0) for _ in range(amount-1)]
         self.guild.voice_client.stop()
+        if self.loopqueue:
+            self.queue.extend(old_songs)
 
     # def _get_player(self, source: str, type_: str):
     #     if type_ == 'uri':
