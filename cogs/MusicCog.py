@@ -117,6 +117,11 @@ class Queue:
         if self.loopqueue:
             self.queue.extend(old_songs)
 
+    def shuffle(self):
+        first = self.queue.pop(0)
+        random.shuffle(self.queue)
+        self.queue.insert(0, first)
+
     # def _get_player(self, source: str, type_: str):
     #     if type_ == 'uri':
     #         return discord.FFmpegPCMAudio(source)
@@ -399,6 +404,11 @@ class VoiceFeature(commands.Cog):
         queue.loopqueue = not queue.loopqueue if state is None else state
 
         await ctx.send(f'Queue loop set to {queue.loopqueue}')
+
+    @commands.command(name='shuffle')
+    async def shuffle(self, ctx):
+        self._get_queue(ctx).shuffle()
+        await ctx.send('Queue shuffled')
 
     @commands.command(name="uri", aliases=["play_from_uri"])
     async def jsk_vc_play(self, ctx: commands.Context, *, uri: Optional[str]):
