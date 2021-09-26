@@ -112,10 +112,15 @@ class Queue:
         self.queue.append(song)
 
     def skip(self, amount=1):
-        old_songs = [self.queue.pop(0) for _ in range(amount-1)]
-        self.guild.voice_client.stop()
         if self.loopqueue:
-            self.queue.extend(old_songs)
+            queue = self.queue
+            queue.extend = [queue.pop(0) for _ in range(amount-1) if len(queue)]
+        else:
+            try:
+                [self.queue.pop(0) for _ in range(amount-1)]
+            except IndexError:
+                pass
+        self.guild.voice_client.stop()
 
     def shuffle(self):
         first = self.queue.pop(0)
