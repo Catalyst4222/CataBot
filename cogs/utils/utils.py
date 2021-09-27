@@ -215,4 +215,15 @@ def sec_to_time(then: int) -> str:
 
     return f'{days} days, {hours} hours, {minutes} minutes, {seconds} seconds'
 
+
+def sec_to_short_time(then: int) -> str:
+    now = time.time() - then
+    minutes, seconds = divmod(int(now), 60)
+    hours, minutes = divmod(minutes, 60)
+
+    return f'{hours}:{minutes}:{seconds}' if hours else (f'{minutes}:{seconds}' if minutes else seconds)
+
+
+
+
 def setup(*_, ): pass
