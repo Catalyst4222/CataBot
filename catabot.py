@@ -13,9 +13,6 @@ from pretty_help import PrettyHelp, DefaultMenu
 
 from cogs import utils
 
-if name == 'posix':  # Make laptop speeeed!
-    import uvloop
-    uvloop.install()
 
 # from cogs import utils
 
@@ -34,6 +31,8 @@ if name == 'posix':  # Make laptop speeeed!
 # shuffle songs
 # now playing
 # common songs
+# better playlist on user end (show progress)
+# meme share feature
 
 
 logger = logging.getLogger()
