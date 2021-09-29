@@ -370,13 +370,16 @@ class VoiceFeature(commands.Cog):
         await ctx.send(f"Resumed audio in {voice.channel.mention}.")
 
     @commands.command(name="volume")
-    async def jsk_vc_volume(self, ctx: commands.Context, *, percentage: float):
+    async def jsk_vc_volume(self, ctx: commands.Context, *, percentage: Optional[float]):
         """
         Adjusts the volume of an audio source if it is supported.
         """
 
         if not self.playing_check(ctx):
             return await ctx.send("The voice client in this guild is not playing anything.")
+
+        if percentage is None:
+            return await ctx.send(f'Current volume: {self._get_queue(ctx).volume:.2f}%')
 
         volume = max(0.0, min(1.0, percentage / 100))
 
