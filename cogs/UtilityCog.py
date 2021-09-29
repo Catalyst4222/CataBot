@@ -7,7 +7,7 @@ from discord_slash.model import ContextMenuType
 from discord_slash.cog_ext import cog_context_menu, cog_slash
 from discord_slash.context import MenuContext, SlashContext
 
-from .utils import run_cmd, sec_to_time
+from .utils import run_cmd, diff_from_unix
 
 
 class Utility(commands.Cog):
@@ -128,7 +128,7 @@ class Utility(commands.Cog):
                         icon_url=str(self.bot.user.avatar_url)) \
             .set_footer(text=datetime.datetime.now().time()) \
             .add_field(name='Latency', value=f'{self.bot.latency:.2f} seconds') \
-            .add_field(name='Time since start', value=sec_to_time(self.bot.start_time))
+            .add_field(name='Time since start', value=diff_from_unix(self.bot.start_time))
 
         uwu = (await run_cmd('echo "Hello World" | uwuify /dev/stdin'))[0] == b'hewwo wowwd'
         embed.add_field(name='uwuifier', value=('On' if uwu else 'Off') + 'line')

@@ -207,7 +207,7 @@ def chunk(iterable, size=10):
         yield chain([first], islice(iterator, size - 1))
 
 
-def sec_to_time(then: int) -> str:
+def diff_from_unix(then: int) -> str:
     now = time.time() - then
     minutes, seconds = divmod(int(now), 60)
     hours, minutes = divmod(minutes, 60)
@@ -216,13 +216,27 @@ def sec_to_time(then: int) -> str:
     return f'{days} days, {hours} hours, {minutes} minutes, {seconds} seconds'
 
 
-def sec_to_short_time(then: int) -> str:
+def short_diff_from_unix(then: int) -> str:
     now = time.time() - then
     minutes, seconds = divmod(int(now), 60)
     hours, minutes = divmod(minutes, 60)
 
     return f'{hours}:{minutes}:{seconds}' if hours else (f'{minutes}:{seconds}' if minutes else seconds)
 
+
+def diff_from_time(diff: int) -> str:
+    minutes, seconds = divmod(int(diff), 60)
+    hours, minutes = divmod(minutes, 60)
+    days, hours = divmod(hours, 24)
+
+    return f'{days} days, {hours} hours, {minutes} minutes, {seconds} seconds'
+
+
+def short_diff_from_time(diff: int) -> str:
+    minutes, seconds = divmod(int(diff), 60)
+    hours, minutes = divmod(minutes, 60)
+
+    return f'{hours}:{minutes}:{seconds}' if hours else (f'{minutes}:{seconds}' if minutes else seconds)
 
 
 
