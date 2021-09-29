@@ -146,7 +146,8 @@ class Utility(commands.Cog):
         """People who broke CataBot at least once, and what they did"""
         people: list[tuple] = [
             ('Catalyst', 'General dev things and exiting from a repl'),
-            ('Crystaline', 'Played a bad song and <something> youtube-dl, crashing the bot')
+            ('Crystaline', 'Played a bad song and <something> youtube-dl, crashing the bot'),
+            ("9th's family", 'Restarting the modem')
         ]
 
         embed = discord.Embed(title='Bad people', description="Please don't break CataBot, CataBot loves you")
