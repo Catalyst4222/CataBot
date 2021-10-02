@@ -1,13 +1,14 @@
 import asyncio
-from discord.ext import commands
+import random
 from typing import Optional, Union
 import discord
 import youtube_dl
 import discord.opus
 import discord.voice_client
 from discord.ext import commands
+import dinteractions_Paginator
 
-from .utils import chunk
+from .utils import chunk, short_diff_from_unix, short_diff_from_time
 
 BASIC_OPTS = {
     'format': 'webm[abr>0]/bestaudio/best',
@@ -40,9 +41,9 @@ def youtube_to_ffmpeg(url, download: bool = False):
 
 
 class Song:
-    __slots__ = ('data', 'url', 'title', 'author', 'duration', 'channel', 'playlist')
+    __slots__ = ('data', 'url', 'title', 'author', 'duration', 'channel', 'playlist', 'start_time')
 
-    def __init__(self, data: dict,):
+    def __init__(self, data: dict, ):
         # # Expected format:
         # # noinspection PyStatementEffect
         # {
@@ -58,11 +59,12 @@ class Song:
         self.url = data['url']
         self.title = data.get('title', self.url)
 
-        self.author = data.get('creator')
+        self.author = data.get('uploader')
         self.channel = data.get('channel_url')
         self.playlist = data.get('playlist')
 
-        self.duration = data.get('duration', float('inf'))
+        self.duration = data.get('duration', 0)
+        self.start_time: Optional[int] = None
 
     def __len__(self):
         return self.duration
@@ -71,17 +73,22 @@ class Song:
         return self.title
 
     @property
+    def elapsed_time(self) -> Optional[str]:
+        if self.start_time is None:
+            return None
+        return f'{short_diff_from_unix(self.start_time)}/{self.duration or "unknown"}'
+
+    @property
+    def duration_str(self):
+        return short_diff_from_time(self.duration)
+
+    @property
     def embed(self) -> discord.Embed:
-        # Do later
-        embed = discord.Embed(title=self.title, url=self.url) \
+        return discord.Embed(title=self.title, url=self.url) \
             .set_thumbnail(url=self.data['thumbnail']) \
             .set_author(name=self.author, url=self.channel) \
             .add_field(name='Playlist', value=self.playlist) \
-            .add_field(name='Duration', value=self.duration)
-
-
-
-        return embed
+            .add_field(name='Duration', value=self.elapsed_time)
 
     # muscle memory
     def to_embed(self) -> discord.Embed:
@@ -89,10 +96,12 @@ class Song:
 
 
 class Queue:
-    __slots__ = ('bot', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx', 'volume')
+    __slots__ = ('bot', 'cog', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx', 'volume')
 
-    def __init__(self, bot, ctx: commands.Context):
-        self.bot: commands.Bot = bot
+    def __init__(self, ctx: commands.Context):
+        self.bot: commands.Bot = ctx.bot
+        # assert isinstance(ctx.cog, VoiceFeature)
+        self.cog: VoiceFeature = ctx.cog
         self.ctx = ctx
         self.bound_channel: discord.TextChannel = ctx.channel
         self.guild: discord.Guild = ctx.guild
@@ -114,13 +123,16 @@ class Queue:
     def skip(self, amount=1):
         if self.loopqueue:
             queue = self.queue
-            queue.extend = [queue.pop(0) for _ in range(amount-1) if len(queue)]
+            queue.extend = [queue.pop(0) for _ in range(amount - 1) if len(queue)]
         else:
             try:
-                [self.queue.pop(0) for _ in range(amount-1)]
+                [self.queue.pop(0) for _ in range(amount - 1)]
             except IndexError:
                 pass
         self.guild.voice_client.stop()
+
+        if not self.queue:
+            self.cleanup()
 
     def shuffle(self):
         first = self.queue.pop(0)
@@ -138,7 +150,12 @@ class Queue:
     def cleanup(self):
         self.queue = []
         # self.guild.voice_client.stop()
-        self._create_task(self.guild.voice_client.disconnect())
+        try:
+            self._create_task(self.guild.voice_client.disconnect())
+        except AttributeError:
+            pass
+        # noinspection PyProtectedMember
+        self.cog._queues.remove(self)
 
     def prime_song(self):
         vc = self.guild.voice_client
@@ -171,22 +188,23 @@ class Queue:
             try:
                 finished = self.queue.pop(0)
             except IndexError:
-                return
+                self._send('An error happened managing th queue')
+                return self.cleanup()
             # self._send(f'Finished playing {finished.title}')
             if self.loopqueue:
                 self.queue.append(finished)
 
         if self.queue:
             self.prime_song()
+
+        else:
+            self._send('The queue is empty, disconnecting')
+            return self.cleanup()
         # else:
         #     self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
 
     def __len__(self):
         return len(self.queue)
-
-
-
-
 
 
 class VoiceFeature(commands.Cog):
@@ -195,18 +213,20 @@ class VoiceFeature(commands.Cog):
     """
     def __init__(self, bot):
         self._bot: commands.Bot = bot
-        self._queues: dict[int, Queue] = {}
+        self._queues: list[Queue] = []
 
     def cog_unload(self):
-        for queue in self._queues.values():
+        for queue in self._queues:
             queue.cleanup()
 
     def _get_queue(self, ctx) -> Queue:
         guild = ctx.guild
-        for queue in self._queues.values():
+        for queue in self._queues:
             if queue.guild == guild:
                 return queue
-        return Queue(self._bot, ctx)
+        new_queue = Queue(ctx)
+        self._queues.append(new_queue)
+        return new_queue
 
     @staticmethod
     async def voice_check(ctx: commands.Context):
@@ -251,7 +271,6 @@ class VoiceFeature(commands.Cog):
 
         return ctx.guild.voice_client.is_playing()
 
-
     @commands.command(name="voice", aliases=["vc"],
                       invoke_without_command=True, ignore_extra=False)
     async def jsk_voice(self, ctx: commands.Context):
@@ -291,7 +310,8 @@ class VoiceFeature(commands.Cog):
             if destination.voice and destination.voice.channel:
                 destination = destination.voice.channel
             else:
-                return await ctx.send("Member has no voice channel.")
+                await ctx.send("Member has no voice channel.")
+                return
 
         voice = ctx.guild.voice_client
 
@@ -299,7 +319,6 @@ class VoiceFeature(commands.Cog):
             await voice.move_to(destination)
         else:
             await destination.connect(reconnect=True)
-        self._queues[ctx.guild.id] = Queue(self._bot, ctx)
 
         await ctx.send(f"Connected to {destination.mention}.")
 
@@ -313,7 +332,7 @@ class VoiceFeature(commands.Cog):
         if not voice:
             return await ctx.send("Not connected to a voice channel in this guild.")
 
-        queue = self._queues.get(ctx.guild.id)
+        queue = self._get_queue(ctx)
         queue.cleanup()
 
         # await voice.disconnect()
@@ -449,7 +468,6 @@ class VoiceFeature(commands.Cog):
         else:
             await ctx.send('File added to queue')
 
-
     @commands.command(parent="jsk_voice", name="play", aliases=["youtubedl", "p", "yt"])
     async def jsk_vc_youtube_dl(self, ctx: commands.Context, *, url: str):
         """
@@ -470,9 +488,12 @@ class VoiceFeature(commands.Cog):
         # remove embed maskers if present
         url = url.lstrip("<").rstrip(">")
 
+        if 'list' in url:
+            return await ctx.send('Playlists are not supported using this command. '
+                                  f'Use `{ctx.prefix}playlist` instead')
 
         # uri = youtube_to_ffmpeg(url)
-        ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)
+        ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)  # 'noplaylist': True
         info = ytdl.extract_info(url, download=False)
         if 'url' not in info:
             return await ctx.send('Invalid link')
@@ -481,11 +502,11 @@ class VoiceFeature(commands.Cog):
         queue.add(Song(info))
 
         if not voice.is_playing():
-            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(info['url'], **FFMPEG_OPTIONS)), after=queue.after)
+            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(info['url'], **FFMPEG_OPTIONS)),
+                       after=queue.after)
             await ctx.send(f"Playing in {voice.channel.mention}.")
         else:
             await ctx.send('File added to queue')
-
 
     @commands.command(name='now_playing', aliases=['np'])
     async def now_playing(self, ctx: commands.Context):
@@ -494,7 +515,6 @@ class VoiceFeature(commands.Cog):
         """
         queue = self._get_queue(ctx)
         await ctx.send(embed=queue.queue[0].embed)
-
 
     @commands.command(name='playlist', aliases=['pl'])
     async def playlist(self, ctx: commands.Context, *, url: str):
@@ -515,15 +535,13 @@ class VoiceFeature(commands.Cog):
         song_links = ("https://youtube.com/v/" + str(dict_['id']) for dict_ in info['entries'])
         song_info = (ytdl.extract_info(link, download=False) for link in song_links)  # Something here?
 
-
-
         queue = self._get_queue(ctx)
 
         first_song = next(song_info)
         queue.add(Song(first_song))
         queue.prime_song()
 
-        await ctx.send('First song primed, chunking the remainder')
+        msg = await ctx.send('First song primed, chunking the remainder')
 
         # TODO: show progress
         for group in chunk(song_info, size=25):
@@ -537,20 +555,42 @@ class VoiceFeature(commands.Cog):
             print('Chunk loaded')
             queue.prime_song()
 
-
         # [queue.add(song) for song in songs]
-        await ctx.send('Playlist added')
+        await msg.reply('Playlist added')
         queue.prime_song()
 
     @commands.command(name='_queues')
     @commands.is_owner()
-    async def show_queues(self, ctx):
+    async def owner_queues(self, ctx):
         await ctx.send(
             '\n\n'.join(
                 f"Server: {queue.guild}\nSongs: {len(queue)}"
-                for queue in self._queues.values()
-            )
+                for queue in self._queues
+            ) or None
         )
+
+    @commands.command(name='queue', aliases=['q'])
+    async def queue(self, ctx):
+        """Show the queue"""
+        if not self.playing_check(ctx):
+            return await ctx.send('Nothing is playing')
+
+        songs = self._get_queue(ctx).queue.copy()
+        # np = songs.pop(0)
+
+        embeds = []
+        for group in chunk(songs):
+            descriptions = [
+                f'{song} | `{song.duration_str}`'
+                for song in group
+            ]
+            embed = discord.Embed(title='title', description='\n\n'.join(descriptions))
+            embeds.append(embed)
+
+        await dinteractions_Paginator.Paginator(
+            bot=self._bot, ctx=ctx, pages=embeds, useIndexButton=True,
+            timeout=60, deleteAfterTimeout=True
+        ).run()
 
 
 
