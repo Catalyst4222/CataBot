@@ -53,7 +53,7 @@ logger.addHandler(stream_handler)
 
 menu = DefaultMenu(active_time=60)
 bot = commands.Bot(
-    command_prefix=commands.when_mentioned_or("#"),
+    command_prefix=commands.when_mentioned_or("#", '\#'),
     case_insensitive=True,
     help_command=PrettyHelp(menu=menu, show_index=False),
     intents=discord.Intents.all()
