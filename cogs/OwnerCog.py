@@ -170,8 +170,10 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
             fmt = None
             stdout = io.StringIO()
 
+            # noinspection PyBroadException
             try:
                 with redirect_stdout(stdout):
+                    # noinspection PyUnboundLocalVariable
                     result = executor(code, variables)
                     if inspect.isawaitable(result):
                         result = await result
@@ -206,7 +208,7 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         who: Union[discord.Member, discord.User],
         *, command: str,
     ):
-        '''Run a command as another user optionally in another channel.'''
+        """Run a command as another user optionally in another channel."""
         msg = copy(ctx.message)
         channel = channel or ctx.channel
         msg.channel = channel
@@ -377,6 +379,26 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
 
 
 
+class ShellCog(commands.Cog, command_attrs=dict(hidden=True)):
+    """Please don't mess with these, largely meant for the owner"""
+
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.current_session = None
+
+    async def cog_check(self, ctx):
+        return await self.bot.is_owner(ctx.author)
+
+    @staticmethod
+    def cleanup_code(content):
+        """Automatically removes code blocks from the code."""
+        # remove ```py\n```
+        if content.startswith('```') and content.endswith('```'):
+            return '\n'.join(content.split('\n')[1:-1])
+
+        # remove `foo`
+        return content.strip('` \n')
+
 
     @commands.command(name="shell", aliases=["bash", "sh", "powershell", "ps1", "ps", "cmd"])
     async def jsk_shell(self, ctx: commands.Context, *, argument: codeblock_converter):
@@ -420,7 +442,42 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         return await ctx.invoke(self.jsk_shell,
                                 argument=Codeblock(argument.language, "pip " + argument.content))
 
+    # @commands.command(name='repl_shell', aliases=['shell_repl'])
+    # async def repl_shell(self, ctx):
+    #     if self.current_session:
+    #         return await ctx.send(f'There is a shell repl running in <#{self.current_session}>')
+    #
+    #     self.current_session = ctx.channel.id
+    #     await ctx.send('Shell repl started!')
+    #
+    #     def check(m):
+    #         return (
+    #             m.author.id == ctx.author.id
+    #             and m.channel.id == ctx.channel.id
+    #             and m.content.startswith('`')
+    #         )
+    #
+    #     shell = AioShell()
+    #
+    #     while True:
+    #         try:
+    #             response = self.cleanup_code((await self.bot.wait_for(
+    #                 'message', check=check, timeout=10.0 * 60.0
+    #             )).content)
+    #
+    #         except asyncio.TimeoutError:
+    #             await ctx.send('Exiting REPL session.')
+    #             self.current_session = None
+    #             break
+    #
+    #         await shell.communicate(response)
+
+
+
+
+
 
 
 def setup(bot):
     bot.add_cog(OwnerThings(bot))
+    bot.add_cog(ShellCog(bot))
