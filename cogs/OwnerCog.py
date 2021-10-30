@@ -8,7 +8,6 @@ from copy import copy
 from . import utils
 from .utils.jsk.repl import AsyncCodeExecutor, AsyncSender, Scope, jsk_python_result_handling
 
-
 from .utils.jsk.codeblocks import Codeblock, codeblock_converter
 from .utils.jsk.paginators import PaginatorInterface, WrappedPaginator
 from .utils.jsk.shell import ShellReader
@@ -52,20 +51,18 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         """Evaluates a code
         WTF is happening I stole this from the internet"""
 
-        env = {
-            'bot': self.bot,
-            'ctx': ctx,
-            'channel': ctx.channel,
-            'author': ctx.author,
-            'guild': ctx.guild,
-            'message': ctx.message,
-            '_': self._last_result,
-            'utils': utils,  # I made this!
-            'slash': self.bot.slash,
-        }
-
-        env.update(self.scope.globals, **self.scope.locals)
-        env.update(globals())
+        env = self.scope.locals | self.scope.globals | \
+            {
+                'bot': self.bot,
+                'ctx': ctx,
+                'channel': ctx.channel,
+                'author': ctx.author,
+                'guild': ctx.guild,
+                'message': ctx.message,
+                '_': self._last_result,
+                'utils': utils,  # I made this!
+                'slash': self.bot.slash,
+            } | globals()
 
         body = self.cleanup_code(body)
         stdout = io.StringIO()
@@ -101,7 +98,7 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.command()
     async def repl(self, ctx):
         """Launches an interactive REPL session."""
-        variables = {
+        variables = self.scope.globals | self.scope.locals | {
             'ctx': ctx,
             'bot': self.bot,
             'message': ctx.message,
@@ -112,8 +109,6 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
             'utils': utils,  # I made this!
             'slash': self.bot.slash,
         }
-
-        variables.update(self.scope.globals, **self.scope.locals)
 
         if ctx.channel.id in self.sessions:
             await ctx.send(
@@ -126,9 +121,9 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
 
         def check(m):
             return (
-                m.author.id == ctx.author.id
-                and m.channel.id == ctx.channel.id
-                and m.content.startswith('`')
+                    m.author.id == ctx.author.id
+                    and m.channel.id == ctx.channel.id
+                    and m.content.startswith('`')
             )
 
         while True:
@@ -202,11 +197,11 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
     @commands.command()
     @commands.is_owner()
     async def sudo(
-        self,
-        ctx,
-        channel: Optional[utils.GlobalChannel],
-        who: Union[discord.Member, discord.User],
-        *, command: str,
+            self,
+            ctx,
+            channel: Optional[utils.GlobalChannel],
+            who: Union[discord.Member, discord.User],
+            *, command: str,
     ):
         """Run a command as another user optionally in another channel."""
         msg = copy(ctx.message)
@@ -231,7 +226,6 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
         for _ in range(times):
             await new_ctx.reinvoke()
 
-
     @commands.command()
     async def toggle_scopes(self, ctx, state: Optional[bool] = None):
         # sourcery skip: assign-if-exp
@@ -243,7 +237,7 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
 
     # https://github.com/Gorialis/jishaku/blob/d1d64857aef6926307cd4a883e107586419ce1e2/jishaku/features/python.py#L130
     @commands.command(aliases=['jsk_repl'])
-    async def jsk_py(self, ctx: commands.Context,):
+    async def jsk_py(self, ctx: commands.Context, ):
         """
         Direct evaluation of Python code.
         Adapted largely from Jishaku, with help from the other REPL function
@@ -353,7 +347,6 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
                 if value:
                     await jsk_python_result_handling(ctx, value)
 
-
             #     value = stdout.getvalue()
             #     # if not eval_ish:
             #     #     result = ''
@@ -378,7 +371,6 @@ class OwnerThings(commands.Cog, command_attrs=dict(hidden=True)):
             #     await ctx.send(f'Unexpected error: `{e}`')
 
 
-
 class ShellCog(commands.Cog, command_attrs=dict(hidden=True)):
     """Please don't mess with these, largely meant for the owner"""
 
@@ -398,7 +390,6 @@ class ShellCog(commands.Cog, command_attrs=dict(hidden=True)):
 
         # remove `foo`
         return content.strip('` \n')
-
 
     @commands.command(name="shell", aliases=["bash", "sh", "powershell", "ps1", "ps", "cmd"])
     async def jsk_shell(self, ctx: commands.Context, *, argument: codeblock_converter):
@@ -471,11 +462,6 @@ class ShellCog(commands.Cog, command_attrs=dict(hidden=True)):
     #             break
     #
     #         await shell.communicate(response)
-
-
-
-
-
 
 
 def setup(bot):
