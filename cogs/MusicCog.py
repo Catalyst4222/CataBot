@@ -1,5 +1,6 @@
 import asyncio
 import random
+import time
 from typing import Optional, Union
 import discord
 import youtube_dl
@@ -71,6 +72,9 @@ class Song:
 
     def __str__(self):
         return self.title
+
+    def start(self):
+        self.start_time = time.time()
 
     @property
     def elapsed_time(self) -> Optional[str]:
@@ -164,6 +168,7 @@ class Queue:
 
         if vc is not None and not vc.is_playing():
             source = self.queue[0]
+            source.start()
             self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
 
             player = discord.PCMVolumeTransformer(
