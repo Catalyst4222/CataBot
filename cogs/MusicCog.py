@@ -148,7 +148,7 @@ class Queue:
     #         raise ValueError(f'Unexpected value: {type_ }')
 
     def cleanup(self):
-        self.queue = []
+        self.queue = [None]
         # self.guild.voice_client.stop()
         try:
             self._create_task(self.guild.voice_client.disconnect())
