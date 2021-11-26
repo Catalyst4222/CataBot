@@ -1,215 +1,12 @@
-import asyncio
-import random
-import time
 from typing import Optional, Union
-import discord
-import youtube_dl
-import discord.opus
-import discord.voice_client
-from discord.ext import commands
+
 import dinteractions_Paginator
+import discord
+import discord.opus
+from discord.ext import commands
 
-from .utils import chunk, short_diff_from_unix, short_diff_from_time
-
-BASIC_OPTS = {
-    'format': 'webm[abr>0]/bestaudio/best',
-    'prefer_ffmpeg': True,
-    'quiet': True,
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                  "Chrome/75.0.3770.80 Safari/537.36 ",
-    'cachedir': False
-}
-
-FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                  'options': '-vn'}
-
-
-class BasicYouTubeDLSource(discord.FFmpegPCMAudio):
-    """
-    Basic audio source for youtube_dl-compatible URLs.
-    """
-
-    def __init__(self, url, download: bool = False):
-        ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)
-        info = ytdl.extract_info(url, download=download)
-        super().__init__(info['url'])
-
-
-def youtube_to_ffmpeg(url, download: bool = False):
-    ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)
-    info = ytdl.extract_info(url, download=download)
-    return info['url']
-
-
-class Song:
-    __slots__ = ('data', 'url', 'title', 'author', 'duration', 'channel', 'playlist', 'start_time')
-
-    def __init__(self, data: dict, ):
-        # # Expected format:
-        # # noinspection PyStatementEffect
-        # {
-        #     'name': Optional[str],
-        #     'url': str,
-        # }
-        # print(data.keys())
-        # print(data['artist'])
-        # print(data['creator'])
-        # print(data['album'])
-        # print(data['playlist'])
-        self.data = data
-        self.url = data['url']
-        self.title = data.get('title', self.url)
-
-        self.author = data.get('uploader')
-        self.channel = data.get('channel_url')
-        self.playlist = data.get('playlist')
-
-        self.duration = data.get('duration', 0)
-        self.start_time: Optional[int] = None
-
-    def __len__(self):
-        return self.duration
-
-    def __str__(self):
-        return self.title
-
-    def start(self):
-        self.start_time = time.time()
-
-    @property
-    def elapsed_time(self) -> Optional[str]:
-        if self.start_time is None:
-            return None
-        return f'{short_diff_from_unix(self.start_time)}/{self.duration or "unknown"}'
-
-    @property
-    def duration_str(self):
-        return short_diff_from_time(self.duration)
-
-    @property
-    def embed(self) -> discord.Embed:
-        return discord.Embed(title=self.title, url=self.url) \
-            .set_thumbnail(url=self.data['thumbnail']) \
-            .set_author(name=self.author, url=self.channel) \
-            .add_field(name='Playlist', value=self.playlist) \
-            .add_field(name='Duration', value=self.elapsed_time)
-
-    # muscle memory
-    def to_embed(self) -> discord.Embed:
-        return self.embed
-
-
-class Queue:
-    __slots__ = ('bot', 'cog', 'bound_channel', 'guild', 'queue', 'loop', 'loopqueue', 'ctx', 'volume')
-
-    def __init__(self, ctx: commands.Context):
-        self.bot: commands.Bot = ctx.bot
-        # assert isinstance(ctx.cog, VoiceFeature)
-        self.cog: VoiceFeature = ctx.cog
-        self.ctx = ctx
-        self.bound_channel: discord.TextChannel = ctx.channel
-        self.guild: discord.Guild = ctx.guild
-        self.queue: list[Song] = []
-        self.loop: bool = False
-        self.loopqueue: bool = False
-        self.volume: int = 100
-
-    @property
-    def _create_task(self):
-        return self.bot.loop.create_task
-
-    def _send(self, *args, **kwargs):
-        return self._create_task(self.bound_channel.send(*args, **kwargs))
-
-    def add(self, song: Song):
-        self.queue.append(song)
-
-    def skip(self, amount=1):
-        if self.loopqueue:
-            queue = self.queue
-            queue.extend = [queue.pop(0) for _ in range(amount - 1) if len(queue)]
-        else:
-            try:
-                [self.queue.pop(0) for _ in range(amount - 1)]
-            except IndexError:
-                pass
-        self.guild.voice_client.stop()
-
-        if not self.queue:
-            self.cleanup()
-
-    def shuffle(self):
-        first = self.queue.pop(0)
-        random.shuffle(self.queue)
-        self.queue.insert(0, first)
-
-    # def _get_player(self, source: str, type_: str):
-    #     if type_ == 'uri':
-    #         return discord.FFmpegPCMAudio(source)
-    #     elif type_ == 'url':
-    #         return BasicYouTubeDLSource(source)
-    #     else:
-    #         raise ValueError(f'Unexpected value: {type_ }')
-
-    def cleanup(self):
-        self.queue = [None]
-        # self.guild.voice_client.stop()
-        try:
-            self._create_task(self.guild.voice_client.disconnect())
-        except AttributeError:
-            pass
-        # noinspection PyProtectedMember
-        self.cog._queues.remove(self)
-
-    def prime_song(self):
-        vc = self.guild.voice_client
-        if not self.queue:
-            return
-
-        if vc is not None and not vc.is_playing():
-            source = self.queue[0]
-            source.start()
-            self._create_task(self.bound_channel.send(f'Now playing {source.title}'))
-
-            player = discord.PCMVolumeTransformer(
-                discord.FFmpegPCMAudio(
-                    source.url, **FFMPEG_OPTIONS
-                )
-            )
-
-            player.volume = self.volume
-
-            self.guild.voice_client.play(player, after=self.after)
-
-    def after(self, error=None):
-        # raise NotImplementedError
-        if error is not None:
-            cog = self.bot.get_cog('Events')
-            self._create_task(cog.error_checker(self.ctx, error))
-
-        # looping logic, will not affect next song playing
-        # it just works, no touchy
-        if not self.loop:
-            try:
-                finished = self.queue.pop(0)
-            except IndexError:
-                self._send('An error happened managing th queue')
-                return self.cleanup()
-            # self._send(f'Finished playing {finished.title}')
-            if self.loopqueue:
-                self.queue.append(finished)
-
-        if self.queue:
-            self.prime_song()
-
-        else:
-            self._send('The queue is empty, disconnecting')
-            return self.cleanup()
-        # else:
-        #     self._create_task(self.bound_channel.send(f'Finished playing {finished}'))
-
-    def __len__(self):
-        return len(self.queue)
+from .YouTube import Song, Queue, Extractor
+from .utils import chunk, Cache, AsyncCache
 
 
 class VoiceFeature(commands.Cog):
@@ -227,13 +24,15 @@ class VoiceFeature(commands.Cog):
     def _get_queue(self, ctx) -> Queue:
         guild = ctx.guild
         for queue in self._queues:
-            if queue.guild == guild:
+            if queue.ctx.guild == guild:
                 return queue
         new_queue = Queue(ctx)
+        new_queue.extractor = Extractor(new_queue)
         self._queues.append(new_queue)
         return new_queue
 
     @staticmethod
+    @AsyncCache
     async def voice_check(ctx: commands.Context):
         """
         Check for whether VC is available in this bot.
@@ -442,6 +241,9 @@ class VoiceFeature(commands.Cog):
         self._get_queue(ctx).shuffle()
         await ctx.send('Queue shuffled')
 
+    @commands.command(name='make_sticky')
+    async def stickify(*_): raise NotImplementedError
+
     @commands.command(name="uri", aliases=["play_from_uri"])
     async def jsk_vc_play(self, ctx: commands.Context, *, uri: Optional[str]):
         """
@@ -485,7 +287,7 @@ class VoiceFeature(commands.Cog):
         # if not youtube_dl:
         #     return await ctx.send("youtube_dl is not installed.")
 
-        voice = ctx.guild.voice_client
+        # voice = ctx.guild.voice_client
 
         # if voice.is_playing():
         #     voice.stop()
@@ -497,21 +299,23 @@ class VoiceFeature(commands.Cog):
             return await ctx.send('Playlists are not supported using this command. '
                                   f'Use `{ctx.prefix}playlist` instead')
 
-        # uri = youtube_to_ffmpeg(url)
-        ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)  # 'noplaylist': True
-        info = ytdl.extract_info(url, download=False)
-        if 'url' not in info:
-            return await ctx.send('Invalid link')
 
         queue = self._get_queue(ctx)
-        queue.add(Song(info))
+        await queue.extractor.play_single_song(url)
 
-        if not voice.is_playing():
-            voice.play(discord.PCMVolumeTransformer(discord.FFmpegPCMAudio(info['url'], **FFMPEG_OPTIONS)),
-                       after=queue.after)
-            await ctx.send(f"Playing in {voice.channel.mention}.")
-        else:
-            await ctx.send('File added to queue')
+        # # uri = youtube_to_ffmpeg(url)
+        # ytdl = youtube_dl.YoutubeDL(BASIC_OPTS)  # 'noplaylist': True
+        # info = ytdl.extract_info(url, download=False)
+        # if 'url' not in info:
+        #     return await ctx.send('Invalid link')
+        #
+        # queue.add(Song(info))
+        #
+        # queue.prime_song()
+        # if not voice.is_playing():
+        #     await ctx.send(f"Playing in {voice.channel.mention}.")
+        # else:
+        #     await ctx.send('File added to queue')
 
     @commands.command(name='now_playing', aliases=['np'])
     async def now_playing(self, ctx: commands.Context):
@@ -533,43 +337,48 @@ class VoiceFeature(commands.Cog):
         # remove embed maskers if present
         url = url.lstrip("<").rstrip(">")
 
-        # uri = youtube_to_ffmpeg(url)
-        ytdl = youtube_dl.YoutubeDL({"extract_flat": 'in_playlist', **BASIC_OPTS})
-        info = ytdl.extract_info(url, download=False)
-
-        song_links = ("https://youtube.com/v/" + str(dict_['id']) for dict_ in info['entries'])
-        song_info = (ytdl.extract_info(link, download=False) for link in song_links)  # Something here?
-
         queue = self._get_queue(ctx)
+        await queue.extractor.play_playlist(url)
 
-        first_song = next(song_info)
-        queue.add(Song(first_song))
-        queue.prime_song()
-
-        msg = await ctx.send('First song primed, chunking the remainder')
-
-        # TODO: show progress
-        for group in chunk(song_info, size=25):
-
-            def blocking():
-                for song in group:
-                    queue.add(Song(song))
-
-            await asyncio.to_thread(blocking)
-
-            print('Chunk loaded')
-            queue.prime_song()
-
-        # [queue.add(song) for song in songs]
-        await msg.reply('Playlist added')
-        queue.prime_song()
+        # # uri = youtube_to_ffmpeg(url)
+        # ytdl = youtube_dl.YoutubeDL({"extract_flat": 'in_playlist', **BASIC_OPTS})
+        # info = ytdl.extract_info(url, download=False)
+        #
+        # print(info)
+        #
+        # song_links = ("https://youtube.com/v/" + str(dict_['id']) for dict_ in info['entries'])
+        # song_info = (ytdl.extract_info(link, download=False) for link in song_links)  # Something here?
+        #
+        # queue = self._get_queue(ctx)
+        #
+        # first_song = next(song_info)
+        # queue.add(Song(first_song))
+        # queue.prime_song()
+        #
+        # msg = await ctx.send('First song primed, chunking the remainder')
+        #
+        # # TODO: show progress
+        # for group in chunk(song_info, size=25):
+        #
+        #     def blocking():
+        #         for song in group:
+        #             queue.add(Song(song))
+        #
+        #     await asyncio.to_thread(blocking)
+        #
+        #     print('Chunk loaded')
+        #     queue.prime_song()
+        #
+        # # [queue.add(song) for song in songs]
+        # await msg.reply('Playlist added')
+        # queue.prime_song()
 
     @commands.command(name='_queues')
     @commands.is_owner()
     async def owner_queues(self, ctx):
         await ctx.send(
             '\n\n'.join(
-                f"Server: {queue.guild}\nSongs: {len(queue)}"
+                f"Server: {queue.ctx.guild}\nSongs: {len(queue)}"
                 for queue in self._queues
             ) or None
         )

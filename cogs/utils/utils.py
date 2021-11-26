@@ -6,11 +6,12 @@ from itertools import chain, islice
 import discord
 import discord_slash
 from discord.ext import commands
-from typing import Callable, Coroutine, Any, Union, Optional
+from typing import Callable, Coroutine, Any, Union, Optional, Awaitable, TypeVar, Iterable, Generator
 from discord_slash.context import InteractionContext
 from discord_slash.model import CommandObject
 from discord_slash.utils.manage_commands import add_slash_command
 
+_T = TypeVar('_T')
 
 async def run_cmd(cmd: str, printout: bool = False, printerr: bool = False):
     proc = await asyncio.create_subprocess_shell(
@@ -36,7 +37,7 @@ class Cache:
 
     def __call__(self, *args, **kwargs) -> Any:
         if self.value is None:
-            self.value = self.func()
+            self.value = self.func(*args, **kwargs)
         return self.value
 
 
@@ -174,14 +175,14 @@ async def register_slash(bot, command: CommandObject):
 
 
 # https://jishaku.readthedocs.io/en/latest/_modules/jishaku/functools.html#executor_function
-def sync_to_thread(func: Callable):
+def sync_to_thread(func: Callable[[...], _T]) -> Callable[[...], Coroutine[None, None, _T]]:
     @wraps(func)
     async def inner(*args, **kwargs):
         loop = asyncio.get_event_loop()
         internal_function = partial(func, *args, **kwargs)
         return await loop.run_in_executor(None, internal_function)
 
-    return inner()
+    return inner
 
 
 # https://stackoverflow.com/questions/7204805/how-to-merge-dictionaries-of-dictionaries/7205107#7205107
@@ -201,7 +202,7 @@ def merge(a, b, path=None):
 
 
 # https://stackoverflow.com/questions/24527006/split-a-generator-into-chunks-without-pre-walking-it
-def chunk(iterable, size=10):
+def chunk(iterable: Iterable[_T], size: int = 10) -> Generator[Generator[_T, Any, None], Any, None]:
     iterator = iter(iterable)
     for first in iterator:
         yield chain([first], islice(iterator, size - 1))
@@ -221,7 +222,7 @@ def short_diff_from_unix(then: int) -> str:
     minutes, seconds = divmod(int(now), 60)
     hours, minutes = divmod(minutes, 60)
 
-    return f'{hours}:{minutes}:{seconds}' if hours else (f'{minutes}:{seconds}' if minutes else seconds)
+    return f'{hours}:{minutes:02}:{seconds:02}' if hours else f'{minutes}:{seconds:02}'
 
 
 def diff_from_time(diff: int) -> str:
@@ -236,7 +237,7 @@ def short_diff_from_time(diff: int) -> str:
     minutes, seconds = divmod(int(diff), 60)
     hours, minutes = divmod(minutes, 60)
 
-    return f'{hours}:{minutes}:{seconds}' if hours else (f'{minutes}:{seconds}' if minutes else seconds)
+    return f'{hours}:{minutes:02}:{seconds:02}' if hours else f'{minutes}:{seconds:02}'
 
 
 
