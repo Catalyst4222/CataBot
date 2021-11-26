@@ -76,7 +76,7 @@ class Song:
 class Queue:
     __slots__ = ('bot', 'cog', 'bound_channel', 'voice', 'ctx',
                  'queue', 'extractor',
-                 'loop', 'loopqueue', 'volume', )
+                 'loop', 'loopqueue', 'volume', 'silent')
 
     def __init__(self, ctx: commands.Context):
         self.bot: commands.Bot = ctx.bot
@@ -90,13 +90,15 @@ class Queue:
         self.loopqueue: bool = False
         self.volume: int = 100
         self.extractor: Optional['Extractor'] = None
+        self.silent: bool = False
 
     @property
     def _create_task(self):
         return self.bot.loop.create_task
 
-    def _send(self, *args, **kwargs):
-        return self._create_task(self.bound_channel.send(*args, **kwargs))
+    def _send(self, *args, **kwargs) -> Optional[discord.Message]:
+        if not self.silent:
+            return self._create_task(self.bound_channel.send(*args, **kwargs))
 
     def add(self, song: Song):
         self.queue.append(song)
