@@ -143,16 +143,17 @@ class Utility(commands.Cog):
         return await self.stats(ctx)
 
     # noinspection SpellCheckingInspection
-    @commands.command(name='badlist')
-    async def badlist(self, ctx):
-        """People who broke CataBot at least once, and what they did"""
+    @commands.command(name='helpers')
+    async def helpers(self, ctx):
+        """People who've helped development in some noticable way
+        If you believe you belong on this list, dm CataBot"""
         people: list[tuple] = [
-            ('Catalyst', 'General dev things and exiting from a repl'),
-            ('Crystaline', 'Played a bad song and <something> youtube-dl, crashing the bot'),
-            ("9th's family", 'Restarting the modem')
+            ('Catalyst', ':sunglasses:'),
+            ('Crystaline', 'Stress testing voice features'),
+            ("9thplayer", 'Hosting')
         ]
 
-        embed = discord.Embed(title='Bad people', description="Please don't break CataBot, CataBot loves you")
+        embed = discord.Embed(title='Helpers', description="People who've helped development in some noticable way")
         [embed.add_field(name=person, value=reason) for person, reason in people]
         await ctx.send(embed=embed)
 
