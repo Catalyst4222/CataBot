@@ -199,7 +199,7 @@ class Queue:
 
 class Extractor:
     def __init__(self, queue: Queue, **options):
-        self.queue = queue
+        self.queue: Queue = queue
         self._ytdl = YoutubeDL(BASIC_OPTS | options)
 
     def _extract(self, link: str, download: bool = False) -> dict:
