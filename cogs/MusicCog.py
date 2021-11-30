@@ -374,6 +374,19 @@ class VoiceFeature(commands.Cog):
         # await msg.reply('Playlist added')
         # queue.prime_song()
 
+    @commands.command(name='search')
+    async def search(self, ctx, *, phrase):
+
+        """
+        Play a song from a youtube playlist
+        Currently, most other playlists from sites are untested
+        """
+        if not self.connected_check(ctx):
+            await self.jsk_vc_join(ctx)
+
+        queue = self._get_queue(ctx)
+        await queue.extractor.search_song('ytsearch:' + phrase)
+
     @commands.command(name='_queues')
     @commands.is_owner()
     async def owner_queues(self, ctx):

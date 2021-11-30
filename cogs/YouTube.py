@@ -32,7 +32,6 @@ class Song:
     def __init__(self, data: dict):
         self.data: dict = data
         self.url: str = data['url']
-        self.origin_url: str = data['origin_url']
         self.title: str = data.get('title', self.url)
 
         self.author: Optional[str] = data.get('uploader')
@@ -255,6 +254,19 @@ class Extractor:
                     await msg.channel.send(f'Exception Caught: `{item.__class__.__name__}: {item.msg}`')
 
         await msg.reply('Playlist added!')
+
+    async def search_song(self, query: str):
+        assert query.startswith('ytsearch:')
+        info = self._extract(query)
+
+        song = await self.extract_single_vid(info['entries'][0]['url'])
+        song.origin_url = info['entries'][0]['url']
+
+        if len(info['entries']) > 1:
+            await self.queue._send('Something weird happened, DM `Catalyst4#4222`')
+
+        self.queue.add(song)
+        self.queue.prime_song()
 
 
 class ExtractionError(Exception):
