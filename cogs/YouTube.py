@@ -27,18 +27,20 @@ FFMPEG_OPTIONS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconne
 
 
 class Song:
-    __slots__ = ('data', 'url', 'title', 'author', 'duration', 'channel', 'playlist', 'start_time')
+    __slots__ = ('data', 'url', "origin_url", 'title', 'author', 'duration', 'channel', 'playlist', 'start_time')
 
     def __init__(self, data: dict):
-        self.data = data
-        self.url = data['url']
-        self.title = data.get('title', self.url)
+        self.data: dict = data
+        self.url: str = data['url']
+        self.origin_url: str = data['origin_url']
+        self.title: str = data.get('title', self.url)
 
-        self.author = data.get('uploader')
-        self.channel = data.get('channel_url')
-        self.playlist = data.get('playlist')
+        self.author: Optional[str] = data.get('uploader')
+        self.channel: Optional[str] = data.get('channel_url')
+        self.playlist: Optional[str] = data.get('playlist')
+        self.origin_url: Optional[str] = data.get('origin_url')
 
-        self.duration = data.get('duration') or 0
+        self.duration: int = data.get('duration') or 0
         self.start_time: Optional[int] = None
 
     def __len__(self):
@@ -62,11 +64,14 @@ class Song:
 
     @property
     def embed(self) -> discord.Embed:
-        return discord.Embed(title=self.title, url=self.url) \
+        embed = discord.Embed(title=self.title) \
             .set_thumbnail(url=self.data['thumbnail']) \
             .set_author(name=self.author, url=self.channel) \
             .add_field(name='Playlist', value=self.playlist) \
             .add_field(name='Duration', value=self.elapsed_time)
+        if self.origin_url:
+            embed.url = self.origin_url
+        return embed
 
     # muscle memory
     def to_embed(self) -> discord.Embed:
