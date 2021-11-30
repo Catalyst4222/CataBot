@@ -38,7 +38,7 @@ class Song:
         self.channel = data.get('channel_url')
         self.playlist = data.get('playlist')
 
-        self.duration = data.get('duration', 0)
+        self.duration = data.get('duration') or 0
         self.start_time: Optional[int] = None
 
     def __len__(self):
