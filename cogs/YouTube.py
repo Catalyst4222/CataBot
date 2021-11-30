@@ -138,6 +138,7 @@ class Queue:
     #     else:
     #         raise ValueError(f'Unexpected value: {type_ }')
 
+    # noinspection PyProtectedMember
     def cleanup(self):
         self.queue = [None]
         # self.guild.voice_client.stop()
@@ -146,7 +147,8 @@ class Queue:
         except AttributeError:
             pass
         # noinspection PyProtectedMember
-        self.cog._queues.remove(self)
+        if self in self.cog._queues:
+            self.cog._queues.remove(self)
 
     def prime_song(self):
         vc = self.voice
