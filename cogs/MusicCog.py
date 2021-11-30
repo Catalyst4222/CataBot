@@ -90,7 +90,8 @@ class VoiceFeature(commands.Cog):
         voice = ctx.guild.voice_client
 
         if not voice or not voice.is_connected():
-            return await ctx.send("Not connected.")
+            await ctx.send("Not connected.")
+            return
 
         await ctx.send(f"Connected to {voice.channel.mention}, "
                        f"{'paused' if voice.is_paused() else 'playing' if voice.is_playing() else 'idle'}.")
