@@ -1,6 +1,7 @@
 import asyncio
 import random
 import time
+from concurrent.futures import Future
 from typing import Optional, Coroutine, TYPE_CHECKING
 
 import discord
@@ -96,11 +97,11 @@ class Queue:
         self.extractor: Optional['Extractor'] = None
         self.silent: bool = False
 
-    @property
-    def _create_task(self):
-        return self.bot.loop.create_task
 
-    def _send(self, *args, **kwargs) -> Optional[discord.Message]:
+    def _create_task(self, coro):
+        return asyncio.run_coroutine_threadsafe(coro, self.bot.loop)
+
+    def _send(self, *args, **kwargs) -> Optional[Future[discord.Message]]:
         if not self.silent:
             return self._create_task(self.bound_channel.send(*args, **kwargs))
 
