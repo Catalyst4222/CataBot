@@ -3,7 +3,7 @@ from typing import Optional, Union
 import dinteractions_Paginator
 import discord
 import discord.opus
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from .YouTube import Song, Queue, Extractor
 from .utils import chunk, Cache, AsyncCache
@@ -30,6 +30,12 @@ class VoiceFeature(commands.Cog):
         new_queue.extractor = Extractor(new_queue)
         self._queues.append(new_queue)
         return new_queue
+
+    @tasks.loop(hours=1, reconnect=True)
+    async def queue_clean(self):
+        for queue in self._queues:
+            if not queue.voice.is_connected():
+                del queue
 
     @staticmethod
     @AsyncCache
